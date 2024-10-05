@@ -1,8 +1,9 @@
 import threading
-
+import AdbConnector
+import time
 import customtkinter as tk
 
-from Utils import *
+from Utils import Utils
 
 tk.set_appearance_mode("System")
 
@@ -12,17 +13,60 @@ class MainWindow(tk.CTk):
     mystic_count: int = 0
     thread: threading.Thread()
     thread_shutdown = threading.Event()
-
+    utils: Utils = None
 
     def __init__(self):
         super().__init__()
+        self.device_refresh_button = None
+        self.startup_button = None
+        self.adb_connection_menu = None
+        self.startup_label = None
+        self.log_frame = None
+        self.iteration_entry = None
+        self.top_label = None
+        self.mystic_count_label = None
+        self.covenant_count_label = None
         self.title("E7 Secret Shop Auto")
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.geometry("500x500")
-        self.create_widgets()
+        self.create_startup_widgets()
 
-    def create_widgets(self):
+    def create_startup_widgets(self):
+        self.startup_label = tk.CTkLabel(self, text="default text")
+        self.startup_label.grid(pady=10, sticky="nsew")
+        self.adb_connection_menu = tk.CTkOptionMenu(self)
+        self.adb_connection_menu.grid(pady=10, sticky="nsew")
+        self.device_refresh_button = tk.CTkButton(self, text="Refresh Device List", command=self.refresh_device)
+        self.device_refresh_button.grid(pady=10, sticky="nsew")
+        self.startup_button = tk.CTkButton(self, text="Start Application", command=self.initialize)
+        self.startup_button.grid(pady=10, sticky="nsew")
+        # Get active devices
+        self.refresh_device()
+        print(AdbConnector.serial_and_model_dict)
+
+    def refresh_device(self):
+        AdbConnector.refresh_adb_device_list()
+        if AdbConnector.serial_and_model_dict:
+            self.startup_label.configure(text="Please select device")
+            self.adb_connection_menu.configure(values=list(AdbConnector.serial_and_model_dict.keys()))
+            self.adb_connection_menu.set(list(AdbConnector.serial_and_model_dict.keys())[0])
+            self.startup_button.configure(state="normal")
+        else:
+            self.startup_label.configure(text="No device found, please click refresh button to fetch device again")
+            self.adb_connection_menu.configure(values=list())
+            self.adb_connection_menu.set(" ")
+            self.startup_button.configure(state="disabled")
+
+    def initialize(self):
+        self.utils = Utils(AdbConnector.serial_and_model_dict[self.adb_connection_menu.get()])
+        self.startup_label.destroy()
+        self.adb_connection_menu.destroy()
+        self.startup_button.destroy()
+        self.device_refresh_button.destroy()
+        self.create_main_widgets()
+
+    def create_main_widgets(self):
         main_frame = tk.CTkFrame(self)
         main_frame.grid(pady=10, padx=10, sticky="nsew")
         main_frame.grid_columnconfigure(0, weight=1)
@@ -50,30 +94,6 @@ class MainWindow(tk.CTk):
         self.log_frame.grid_columnconfigure(0, weight=1)
         self.log_frame.grid_rowconfigure(0, weight=1)
         self.log_frame.grid(pady=10, padx=10)
-
-        # self.btn = tk.CTkButton(main_frame, text="Test", command=self.justForTest)
-        # self.btn.grid(pady=10)
-
-    # # Testing purpose demo code
-    # def justForTest(self):
-    #     if self.btn._text == "Test":
-    #         self.thread = threading.Thread(target=self.simpleSleep, daemon=True)
-    #         self.thread.start()
-    #         self.btn.configure(text="Test1")
-    #     else:
-    #         self.create_log_label(f"Stop received, please wait until process stop")
-    #         self.thread_shutdown.set()
-    #         print("switched to test")
-    #         self.btn.configure(text="Test")
-    #
-    # # Testing purpose demo code
-    # def simpleSleep(self):
-    #     for x in range(0, 10):
-    #         time.sleep(1)
-    #         self.create_log_label(f"sleep: {x}")
-    #         if self.thread_shutdown.is_set():
-    #             break
-    #     self.create_log_label(f"exit successful")
 
     # Function to change button state and run or terminate process in thread
     def run_main_process(self):
@@ -114,27 +134,27 @@ class MainWindow(tk.CTk):
             widget.destroy()
 
     def check_bookmark_and_update_log(self):
-        if check_and_buy_covenant():
+        if self.utils.check_and_buy_covenant():
             self.create_log_label("Found Covenant Bookmark!")
             self.covenant_count += 5
             self.covenant_count_label.configure(text="Total Covenant: " + str(self.covenant_count))
-        if check_and_buy_mystic():
+        if self.utils.check_and_buy_mystic():
             self.create_log_label("Found Mystic Bookmark!")
             self.mystic_count += 50
             self.mystic_count_label.configure(text="Total Mystic: " + str(self.mystic_count))
 
     def start_store_fresh_iteration(self, total_iteration: int):
         for current_iteration in range(0, total_iteration):
-            self.create_log_label(f"--------Iteration: {current_iteration+1}--------")
+            self.create_log_label(f"--------Iteration: {current_iteration + 1}--------")
             self.check_bookmark_and_update_log()
-            device.swipe(900, 500, 900, 0)
+            self.utils.swipe_down()
             time.sleep(0.5)
             self.check_bookmark_and_update_log()
             if self.thread_shutdown.is_set():
                 self.create_log_label("####### Process Stopped #######")
                 self.top_label.configure(text="Please enter the total iterations you want to run")
                 return
-            refresh_shop()
+            self.utils.refresh_shop()
         # Check again for last refresh
         self.check_bookmark_and_update_log()
         self.create_log_label("####### Process Stopped #######")
