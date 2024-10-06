@@ -1,4 +1,5 @@
 import subprocess
+import PathConverter
 
 # Must call refresh_adb_device_list to update the dictionary before using
 serial_and_model_dict: dict[str, str] = {}
@@ -6,7 +7,7 @@ serial_and_model_dict: dict[str, str] = {}
 
 def refresh_adb_device_list():
     serial_and_model_dict.clear()
-    adb_command = "./platform-tools/adb devices -l"
+    adb_command = PathConverter.get_current_path("platform-tools", "adb devices -l")
     adb_device_result_list = subprocess.run(adb_command, capture_output=True, text=True).stdout.splitlines()
     adb_device_result_list.pop(0)
     adb_device_result_list.pop()

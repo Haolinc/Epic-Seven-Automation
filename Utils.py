@@ -1,18 +1,19 @@
 import random
 import time
-
 import numpy
 import adbutils
 import aircv as ac
+import PathConverter
 
-covenant = ac.imread("./image/Covenant.png")
-covenant_buy = ac.imread("./image/CovenantBuy.png")
-covenant_buy_confirmation = ac.imread("./image/CovenantBuyConfirmation.png")
-mystic = ac.imread("./image/Mystic.png")
-mystic_buy = ac.imread("./image/MysticBuy.png")
-mystic_buy_confirmation = ac.imread("./image/MysticBuyConfirmation.png")
-refresh = ac.imread("./image/Refresh.png")
-refresh_confirm = ac.imread("./image/RefreshConfirm.png")
+
+covenant = ac.imread(PathConverter.get_current_path("image", "Covenant.png"))
+covenant_buy = ac.imread(PathConverter.get_current_path("image", "CovenantBuy.png"))
+covenant_buy_confirmation = ac.imread(PathConverter.get_current_path("image", "CovenantBuyConfirmation.png"))
+mystic = ac.imread(PathConverter.get_current_path("image", "Mystic.png"))
+mystic_buy = ac.imread(PathConverter.get_current_path("image", "MysticBuy.png"))
+mystic_buy_confirmation = ac.imread(PathConverter.get_current_path("image", "MysticBuyConfirmation.png"))
+refresh = ac.imread(PathConverter.get_current_path("image", "Refresh.png"))
+refresh_confirm = ac.imread(PathConverter.get_current_path("image", "RefreshConfirm.png"))
 
 
 class Utils:
