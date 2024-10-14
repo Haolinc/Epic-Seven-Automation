@@ -4,7 +4,6 @@ import numpy
 import adbutils
 import aircv as ac
 
-from ObjectClickResult import ObjectClickResult
 import PathConverter
 
 covenant = ac.imread(PathConverter.get_current_path("image", "Covenant.png"))
@@ -94,13 +93,3 @@ class Utils:
             return False
         time.sleep(0.2)
         return True
-
-    def check_and_buy_covenant(self) -> ObjectClickResult:
-        if self.check_covenant():
-            return ObjectClickResult(object_found=True, click_success=self.buy_covenant())
-        return ObjectClickResult(object_found=False, click_success=True)
-
-    def check_and_buy_mystic(self) -> ObjectClickResult:
-        if self.check_mystic():
-            return ObjectClickResult(object_found=True, click_success=self.buy_mystic())
-        return ObjectClickResult(object_found=False, click_success=True)

@@ -138,26 +138,27 @@ class MainWindow(tk.CTk):
             widget.destroy()
 
     def check_bookmark_and_update_log(self):
-        covenant_result = self.utils.check_and_buy_covenant()
-        mystic_result = self.utils.check_and_buy_mystic()
-        if covenant_result.object_found:
-            self.create_log_label("Found Covenant Bookmark!")
-            self.covenant_count += 5
-            self.covenant_count_label.configure(text="Total Covenant: " + str(self.covenant_count))
-        if mystic_result.object_found:
-            self.create_log_label("Found Mystic Bookmark!")
-            self.mystic_count += 50
-            self.mystic_count_label.configure(text="Total Mystic: " + str(self.mystic_count))
-
-        # When the click failed, the application need to be stopped
-        if not covenant_result.click_success:
-            self.create_log_label("Covenant Purchase Fail")
-            self.thread_shutdown.set()
-            self.check_shutdown_flag_in_thread()
-        elif not mystic_result.click_success:
-            self.create_log_label("Mystic Purchase Fail")
-            self.thread_shutdown.set()
-            self.check_shutdown_flag_in_thread()
+        if self.utils.check_covenant():
+            if self.utils.buy_covenant():
+                self.create_log_label("Found Covenant Bookmark!")
+                self.covenant_count += 5
+                self.covenant_count_label.configure(text="Total Covenant: " + str(self.covenant_count))
+            # This only happens when multiple retry attempt fails
+            else:
+                self.create_log_label("Covenant Purchase Fail, Stopping the application")
+                self.thread_shutdown.set()
+                self.check_shutdown_flag_in_thread()
+                return
+        if self.utils.check_mystic():
+            if self.utils.buy_mystic():
+                self.create_log_label("Found Mystic Bookmark!")
+                self.mystic_count += 50
+                self.mystic_count_label.configure(text="Total Mystic: " + str(self.mystic_count))
+            # This only happens when multiple retry attempt fails
+            else:
+                self.create_log_label("Mystic Purchase Fail, Stopping the application")
+                self.thread_shutdown.set()
+                self.check_shutdown_flag_in_thread()
 
     def start_store_fresh_iteration(self, total_iteration: int):
         for current_iteration in range(0, total_iteration):
@@ -169,7 +170,12 @@ class MainWindow(tk.CTk):
             if self.thread_shutdown.is_set():
                 self.create_log_label("####### Process Stopped #######")
                 return
-            self.utils.refresh_shop()
+            # When refresh failed, Stop the application
+            if not self.utils.refresh_shop():
+                self.create_log_label("Mystic Purchase Fail, Stopping the application")
+                self.thread_shutdown.set()
+                self.check_shutdown_flag_in_thread()
+                return
         # Check again for last refresh
         self.check_bookmark_and_update_log()
         self.create_log_label("####### Process Stopped #######")
