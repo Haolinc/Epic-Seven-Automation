@@ -46,9 +46,10 @@ class Utils:
             self.__click_target(source_img, target_img, identifier, retry_count - 1)
 
     def __refresh_expedition(self) -> bool:
-        current_screenshot = self.device.screenshot()
+        current_screenshot = self.__get_numpy_screenshot()
         if self.__find_image(source_img=current_screenshot, target_img=try_again):
             self.__click_target(source_img=current_screenshot, target_img=try_again, identifier="refresh expedition")
+            time.sleep(2)  # Wait for a bit to check if there are some other expedition coming in
             return True
         return False
 
