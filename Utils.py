@@ -40,16 +40,18 @@ class Utils:
                 time.sleep(0.2)
             return True
         except Exception as e:
-            print(f"Unable to find image, Exception: {e}")
+            print(f"Unable to find image, Exception: {e}, identifier: {identifier}")
             is_expedition = self.__refresh_expedition()
             print(f"Found expedition? {is_expedition}")
-            self.__click_target(source_img, target_img, identifier, retry_count - 1)
+            # Re-click on target with new screenshot
+            self.__click_target(self.__get_numpy_screenshot(), target_img, identifier, retry_count - 1)
 
     def __refresh_expedition(self) -> bool:
         current_screenshot = self.__get_numpy_screenshot()
         if self.__find_image(source_img=current_screenshot, target_img=try_again):
             self.__click_target(source_img=current_screenshot, target_img=try_again, identifier="refresh expedition")
             time.sleep(2)  # Wait for a bit to check if there are some other expedition coming in
+            self.swipe_down()  # Need to click at least once if another expedition popping up
             return True
         return False
 
