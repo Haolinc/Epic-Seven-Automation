@@ -1,4 +1,4 @@
-from ui.DeviceSelectionUI import DeviceSelectionUI
+from ui.DeviceSelection import DeviceSelectionUI
 
 
 def run():
