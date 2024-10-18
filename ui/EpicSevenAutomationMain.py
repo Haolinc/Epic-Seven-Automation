@@ -15,12 +15,8 @@ class MainWindow(tk.CTk):
     thread_shutdown = threading.Event()
     utils: Utils = None
 
-    def __init__(self):
+    def __init__(self, utilities: Utils):
         super().__init__()
-        self.device_refresh_button = None
-        self.startup_button = None
-        self.adb_connection_menu = None
-        self.startup_label = None
         self.log_frame = None
         self.iteration_entry = None
         self.top_label = None
@@ -30,40 +26,7 @@ class MainWindow(tk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.geometry("500x500")
-        self.create_startup_widgets()
-
-    def create_startup_widgets(self):
-        self.startup_label = tk.CTkLabel(self, text="default text")
-        self.startup_label.grid(pady=10, sticky="nsew")
-        self.adb_connection_menu = tk.CTkOptionMenu(self)
-        self.adb_connection_menu.grid(pady=10, sticky="nsew")
-        self.device_refresh_button = tk.CTkButton(self, text="Refresh Device List", command=self.refresh_device)
-        self.device_refresh_button.grid(pady=10, sticky="nsew")
-        self.startup_button = tk.CTkButton(self, text="Start Application", command=self.initialize)
-        self.startup_button.grid(pady=10, sticky="nsew")
-        # Get active devices
-        self.refresh_device()
-        print(AdbConnector.serial_and_model_dict)
-
-    def refresh_device(self):
-        AdbConnector.refresh_adb_device_list()
-        if AdbConnector.serial_and_model_dict:
-            self.startup_label.configure(text="Please select device")
-            self.adb_connection_menu.configure(values=list(AdbConnector.serial_and_model_dict.keys()))
-            self.adb_connection_menu.set(list(AdbConnector.serial_and_model_dict.keys())[0])
-            self.startup_button.configure(state="normal")
-        else:
-            self.startup_label.configure(text="No device found, please click refresh button to fetch device again")
-            self.adb_connection_menu.configure(values=list())
-            self.adb_connection_menu.set(" ")
-            self.startup_button.configure(state="disabled")
-
-    def initialize(self):
-        self.utils = Utils(AdbConnector.serial_and_model_dict[self.adb_connection_menu.get()])
-        self.startup_label.destroy()
-        self.adb_connection_menu.destroy()
-        self.startup_button.destroy()
-        self.device_refresh_button.destroy()
+        self.utils = utilities
         self.create_main_widgets()
 
     def create_main_widgets(self):
@@ -172,7 +135,7 @@ class MainWindow(tk.CTk):
                 return
             # When refresh failed, Stop the application
             if not self.utils.refresh_shop():
-                self.create_log_label("Mystic Purchase Fail, Stopping the application")
+                self.create_log_label("Refresh Shop Fail, Stopping the application")
                 self.thread_shutdown.set()
                 self.check_shutdown_flag_in_thread()
                 return
@@ -182,6 +145,5 @@ class MainWindow(tk.CTk):
         self.thread_shutdown.set()
         self.check_shutdown_flag_in_thread()
 
-
-app = MainWindow()
-app.mainloop()
+    def launch(self):
+        self.mainloop()
