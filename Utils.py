@@ -27,7 +27,7 @@ class Utils:
     def __find_image(self, source_img, target_img) -> dict[any, any]:
         return ac.find_template(source_img, target_img, 0.95)
 
-    def __click_target(self, source_img, target_img, identifier: str = "default", retry_count: int = 2) -> bool:
+    def __click_target(self, source_img, target_img, identifier: str = "default", retry_count: int = 5) -> bool:
         if retry_count < 0:
             print(f"Retry count less than 0, Error!")
             return False
@@ -44,7 +44,7 @@ class Utils:
             is_expedition = self.__refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             # Re-click on target with new screenshot
-            self.__click_target(self.__get_numpy_screenshot(), target_img, identifier, retry_count - 1)
+            return self.__click_target(self.__get_numpy_screenshot(), target_img, identifier, retry_count - 1)
 
     def __refresh_expedition(self) -> bool:
         current_screenshot = self.__get_numpy_screenshot()
