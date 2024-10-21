@@ -99,6 +99,7 @@ class MainWindow(tk.CTk):
     def reset_frame(self, frame: tk.CTkScrollableFrame | tk.CTkFrame):
         for widget in list(frame.children.values()):
             widget.destroy()
+        frame.update()
 
     def check_bookmark_and_update_log(self):
         if self.utils.check_covenant():
