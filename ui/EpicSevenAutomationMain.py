@@ -15,12 +15,8 @@ class MainWindow(tk.CTk):
     thread_shutdown = threading.Event()
     utils: Utils = None
 
-    def __init__(self):
+    def __init__(self, utilities: Utils):
         super().__init__()
-        self.device_refresh_button = None
-        self.startup_button = None
-        self.adb_connection_menu = None
-        self.startup_label = None
         self.log_frame = None
         self.iteration_entry = None
         self.top_label = None
@@ -30,40 +26,7 @@ class MainWindow(tk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.geometry("500x500")
-        self.create_startup_widgets()
-
-    def create_startup_widgets(self):
-        self.startup_label = tk.CTkLabel(self, text="default text")
-        self.startup_label.grid(pady=10, sticky="nsew")
-        self.adb_connection_menu = tk.CTkOptionMenu(self)
-        self.adb_connection_menu.grid(pady=10, sticky="nsew")
-        self.device_refresh_button = tk.CTkButton(self, text="Refresh Device List", command=self.refresh_device)
-        self.device_refresh_button.grid(pady=10, sticky="nsew")
-        self.startup_button = tk.CTkButton(self, text="Start Application", command=self.initialize)
-        self.startup_button.grid(pady=10, sticky="nsew")
-        # Get active devices
-        self.refresh_device()
-        print(AdbConnector.serial_and_model_dict)
-
-    def refresh_device(self):
-        AdbConnector.refresh_adb_device_list()
-        if AdbConnector.serial_and_model_dict:
-            self.startup_label.configure(text="Please select device")
-            self.adb_connection_menu.configure(values=list(AdbConnector.serial_and_model_dict.keys()))
-            self.adb_connection_menu.set(list(AdbConnector.serial_and_model_dict.keys())[0])
-            self.startup_button.configure(state="normal")
-        else:
-            self.startup_label.configure(text="No device found, please click refresh button to fetch device again")
-            self.adb_connection_menu.configure(values=list())
-            self.adb_connection_menu.set(" ")
-            self.startup_button.configure(state="disabled")
-
-    def initialize(self):
-        self.utils = Utils(AdbConnector.serial_and_model_dict[self.adb_connection_menu.get()])
-        self.startup_label.destroy()
-        self.adb_connection_menu.destroy()
-        self.startup_button.destroy()
-        self.device_refresh_button.destroy()
+        self.utils = utilities
         self.create_main_widgets()
 
     def create_main_widgets(self):
@@ -105,15 +68,19 @@ class MainWindow(tk.CTk):
             self.start_button.configure(state="disabled")
             self.create_log_label("####### Process Stopping, Please Wait #######")
             self.thread_shutdown.set()
-            self.check_thread()
+            self.check_shutdown_flag_in_thread()
 
     # Use for unlocking the button from disabled state
-    def check_thread(self):
+    def check_shutdown_flag_in_thread(self):
         if self.thread.is_alive():
-            self.after(100, self.check_thread)
+            self.after(100, self.check_shutdown_flag_in_thread)
         else:
-            self.start_button.configure(state="normal")
-            self.start_button.configure(text="Start")
+            self.reset_widgets()
+
+    def reset_widgets(self):
+        self.start_button.configure(state="normal")
+        self.start_button.configure(text="Start")
+        self.top_label.configure(text="Please enter the total iterations you want to run")
 
     # Starts the process,
     def start_process(self):
@@ -132,16 +99,30 @@ class MainWindow(tk.CTk):
     def reset_frame(self, frame: tk.CTkScrollableFrame | tk.CTkFrame):
         for widget in list(frame.children.values()):
             widget.destroy()
+        frame.update()
 
     def check_bookmark_and_update_log(self):
-        if self.utils.check_and_buy_covenant():
-            self.create_log_label("Found Covenant Bookmark!")
-            self.covenant_count += 5
-            self.covenant_count_label.configure(text="Total Covenant: " + str(self.covenant_count))
-        if self.utils.check_and_buy_mystic():
-            self.create_log_label("Found Mystic Bookmark!")
-            self.mystic_count += 50
-            self.mystic_count_label.configure(text="Total Mystic: " + str(self.mystic_count))
+        if self.utils.check_covenant():
+            if self.utils.buy_covenant():
+                self.create_log_label("Found Covenant Bookmark!")
+                self.covenant_count += 5
+                self.covenant_count_label.configure(text="Total Covenant: " + str(self.covenant_count))
+            # This only happens when multiple retry attempt fails
+            else:
+                self.create_log_label("Covenant Purchase Fail, Stopping the application")
+                self.thread_shutdown.set()
+                self.check_shutdown_flag_in_thread()
+                return
+        if self.utils.check_mystic():
+            if self.utils.buy_mystic():
+                self.create_log_label("Found Mystic Bookmark!")
+                self.mystic_count += 50
+                self.mystic_count_label.configure(text="Total Mystic: " + str(self.mystic_count))
+            # This only happens when multiple retry attempt fails
+            else:
+                self.create_log_label("Mystic Purchase Fail, Stopping the application")
+                self.thread_shutdown.set()
+                self.check_shutdown_flag_in_thread()
 
     def start_store_fresh_iteration(self, total_iteration: int):
         for current_iteration in range(0, total_iteration):
@@ -152,15 +133,18 @@ class MainWindow(tk.CTk):
             self.check_bookmark_and_update_log()
             if self.thread_shutdown.is_set():
                 self.create_log_label("####### Process Stopped #######")
-                self.top_label.configure(text="Please enter the total iterations you want to run")
                 return
-            self.utils.refresh_shop()
+            # When refresh failed, Stop the application
+            if not self.utils.refresh_shop():
+                self.create_log_label("Refresh Shop Fail, Stopping the application")
+                self.thread_shutdown.set()
+                self.check_shutdown_flag_in_thread()
+                return
         # Check again for last refresh
         self.check_bookmark_and_update_log()
         self.create_log_label("####### Process Stopped #######")
-        self.top_label.configure(text="Please enter the total iterations you want to run")
-        self.start_button.configure(text="Start")
+        self.thread_shutdown.set()
+        self.check_shutdown_flag_in_thread()
 
-
-app = MainWindow()
-app.mainloop()
+    def launch(self):
+        self.mainloop()

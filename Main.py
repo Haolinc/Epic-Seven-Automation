@@ -1,8 +1,8 @@
-import MainWindow as mainWindow
+from ui.DeviceSelection import DeviceSelectionUI
 
 
 def run():
-    mainWindow.MainWindow()
+    DeviceSelectionUI().launch()
 
 
 if __name__ == "__main__":
