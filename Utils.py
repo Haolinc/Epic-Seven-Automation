@@ -3,7 +3,6 @@ import time
 import numpy
 import adbutils
 import aircv as ac
-
 import PathConverter
 
 covenant = ac.imread(PathConverter.get_current_path("image", "Covenant.png"))
@@ -57,6 +56,10 @@ class Utils:
 
     def swipe_down(self):
         self.device.swipe(900, 500, 900, 0)
+
+
+
+
 
     def check_covenant(self) -> bool:
         return self.__find_image(source_img=self.__get_numpy_screenshot(), target_img=covenant) is not None
