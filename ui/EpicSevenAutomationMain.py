@@ -4,6 +4,8 @@ import time
 import customtkinter as tk
 
 from Utils import Utils
+from automation.Utilities import Utilities
+from automation.DailyArena import DailyArena
 
 tk.set_appearance_mode("System")
 
@@ -14,8 +16,10 @@ class MainWindow(tk.CTk):
     thread: threading.Thread()
     thread_shutdown = threading.Event()
     utils: Utils = None
+    utilities: Utilities = None
+    daily_arena: DailyArena = None
 
-    def __init__(self, utilities: Utils):
+    def __init__(self, utils: Utils, utilities: Utilities):
         super().__init__()
         self.log_frame = None
         self.iteration_entry = None
@@ -26,8 +30,10 @@ class MainWindow(tk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.geometry("500x500")
-        self.utils = utilities
+        self.utils = utils
+        self.daily_arena = DailyArena(utilities)
         self.create_main_widgets()
+        utilities.save_image()
 
     def create_main_widgets(self):
         main_frame = tk.CTkFrame(self)
@@ -52,6 +58,10 @@ class MainWindow(tk.CTk):
         self.start_button = tk.CTkButton(main_frame, text="Start", command=self.run_main_process)
         self.start_button.grid(pady=10, padx=10)
 
+        # new Arena automation start
+        self.start_arena_button = tk.CTkButton(main_frame, text="Arena_Start", command=self.run_arena_process)
+        self.start_arena_button.grid(pady=10, padx=10)
+
         # Logger frame to track log
         self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=200, width=400)
         self.log_frame.grid_columnconfigure(0, weight=1)
@@ -60,7 +70,7 @@ class MainWindow(tk.CTk):
 
     # Function to change button state and run or terminate process in thread
     def run_main_process(self):
-        if self.start_button.text == "Start":
+        if self.start_button.cget("text") == "Start":
             self.thread_shutdown.clear()
             self.thread = threading.Thread(target=self.start_process, daemon=True)
             self.thread.start()
@@ -69,6 +79,28 @@ class MainWindow(tk.CTk):
             self.create_log_label("####### Process Stopping, Please Wait #######")
             self.thread_shutdown.set()
             self.check_shutdown_flag_in_thread()
+
+    def run_arena_process(self):
+        if self.start_arena_button.cget("text") == "Arena_Start":
+            self.thread_shutdown.clear()
+            self.thread = threading.Thread(target=self.start_arena_process(), daemon=True)
+            self.thread.start()
+        else:
+            self.start_button.configure(state="disabled")
+            self.create_log_label("####### Process Stopping, Please Wait #######")
+            self.thread_shutdown.set()
+            self.check_shutdown_flag_in_thread()
+
+    def start_arena_process(self):
+        self.reset_frame(self.log_frame)
+        self.create_log_label("####### Process Starting #######")
+        # total_iteration = int(self.iteration_entry.get())
+        self.top_label.configure(text="Iteration started")
+        self.start_button.configure(text="Stop")
+        self.start_arena_automation_iteration()
+
+    def start_arena_automation_iteration(self):
+        self.daily_arena.arena_automation()
 
     # Use for unlocking the button from disabled state
     def check_shutdown_flag_in_thread(self):

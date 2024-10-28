@@ -2,6 +2,7 @@ import AdbConnector
 import customtkinter as tk
 
 from Utils import Utils
+from automation.Utilities import Utilities
 from ui.EpicSevenAutomationMain import MainWindow
 
 tk.set_appearance_mode("System")
@@ -51,4 +52,4 @@ class DeviceSelectionUI(tk.CTk):
     def launch_main_window(self):
         print("DeviceSelectionUI dying")
         self.destroy()
-        MainWindow(utilities=Utils(AdbConnector.serial_and_model_dict[self.adb_connection_menu.get()])).launch()
+        MainWindow(utils=Utils(AdbConnector.serial_and_model_dict[self.adb_connection_menu.get()]), utilities=Utilities(AdbConnector.serial_and_model_dict[self.adb_connection_menu.get()])).launch()
