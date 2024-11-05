@@ -1,7 +1,4 @@
-import random
 import time
-from turtledemo.penrose import start
-
 import numpy
 import adbutils
 import aircv as ac
@@ -34,13 +31,22 @@ class Utilities:
     def wait_for_button_and_click(self, target_img, description="default", timeout = 5):
         start_time = time.time()
         while time.time() - start_time < timeout:
-            print("looping while")
             if self.find_image(self.get_numpy_screenshot(), target_img):
                 self.click_target(self.get_numpy_screenshot(),target_img)
                 return True
             else:
                 time.sleep(1)
         raise Exception(f"Timeout: {description} not found within {timeout} seconds")
+
+    def wait_for_button_and_click_bool(self, target_img, description="default", timeout = 5):
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            if self.find_image(self.get_numpy_screenshot(), target_img):
+                self.click_target(self.get_numpy_screenshot(),target_img)
+                return True
+            else:
+                time.sleep(1)
+        return False
 
     def click_center_of_screen(self):
         center_x = 500
