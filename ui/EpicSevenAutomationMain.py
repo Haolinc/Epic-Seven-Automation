@@ -1,5 +1,4 @@
 import threading
-import AdbConnector
 import time
 import customtkinter as tk
 
@@ -23,6 +22,7 @@ class MainWindow(tk.CTk):
         super().__init__()
         self.log_frame = None
         self.iteration_entry = None
+        self.arena_count = None
         self.top_label = None
         self.mystic_count_label = None
         self.covenant_count_label = None
@@ -36,37 +36,57 @@ class MainWindow(tk.CTk):
         utilities.save_image()
 
     def create_main_widgets(self):
+        # Main frame setup
         main_frame = tk.CTkFrame(self)
-        main_frame.grid(pady=10, padx=10, sticky="nsew")
+        main_frame.grid(pady=15, padx=15, sticky="nsew")
         main_frame.grid_columnconfigure(0, weight=1)
-        main_frame.grid_rowconfigure(0, weight=1)
 
-        # Top frame that contains bookmark count labels
+        # Top frame with counters
         top_count_frame = tk.CTkFrame(main_frame)
-        top_count_frame.grid(pady=10, padx=10)
-        top_count_frame.grid_columnconfigure(1, weight=1)
-        top_count_frame.grid_rowconfigure(0, weight=1)
-        self.covenant_count_label = tk.CTkLabel(top_count_frame, text=f"Total Covenant: 0")
-        self.covenant_count_label.grid(pady=10, padx=30, column=0, row=0, sticky="nsew")
-        self.mystic_count_label = tk.CTkLabel(top_count_frame, text=f"Total Mystic: 0")
-        self.mystic_count_label.grid(pady=10, padx=30, column=1, row=0, sticky="nsew")
+        top_count_frame.grid(pady=(10, 5), padx=10, sticky="ew")
+        top_count_frame.grid_columnconfigure((0, 1), weight=1)  # Equal spacing for labels
 
-        self.top_label = tk.CTkLabel(main_frame, text="Please enter the total iterations you want to run")
-        self.top_label.grid(pady=10, padx=10, sticky="nsew")
+        # Covenant and Mystic count labels
+        self.covenant_count_label = tk.CTkLabel(top_count_frame, text="Total Covenant: 0", anchor="w")
+        self.covenant_count_label.grid(pady=5, padx=(10, 5), column=0, row=0, sticky="ew")
+        self.mystic_count_label = tk.CTkLabel(top_count_frame, text="Total Mystic: 0", anchor="e")
+        self.mystic_count_label.grid(pady=5, padx=(5, 10), column=1, row=0, sticky="ew")
+
+        # Label and input for iterations
+        self.top_label = tk.CTkLabel(main_frame, text="Enter Total Iterations", anchor="w")
+        self.top_label.grid(pady=(10, 5), padx=10, sticky="ew")
         self.iteration_entry = tk.CTkEntry(main_frame, placeholder_text="Refresh Count")
-        self.iteration_entry.grid(pady=10, padx=10)
+        self.iteration_entry.grid(pady=5, padx=10, sticky="ew")
+
+        # Start button
         self.start_button = tk.CTkButton(main_frame, text="Start", command=self.run_main_process)
-        self.start_button.grid(pady=10, padx=10)
+        self.start_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
-        # new Arena automation start
-        self.start_arena_button = tk.CTkButton(main_frame, text="Arena_Start", command=self.run_arena_process)
-        self.start_arena_button.grid(pady=10, padx=10)
+        # Arena options
+        arena_label = tk.CTkLabel(main_frame, text="Arena Settings", anchor="w", font=("Arial", 12, "bold"))
+        arena_label.grid(pady=(10, 5), padx=10, sticky="w")
 
-        # Logger frame to track log
+        self.arena_count = tk.CTkEntry(main_frame, placeholder_text="Arena Count")
+        self.arena_count.grid(pady=5, padx=10, sticky="ew")
+        self.arena_with_extra = tk.BooleanVar(value=False)
+        self.arena_checkbox = tk.CTkCheckBox(
+            main_frame,
+            text="Arena with Extra",
+            variable=self.arena_with_extra,
+            onvalue=True,
+            offvalue=False
+        )
+        self.arena_checkbox.grid(pady=5, padx=10, sticky="w")
+
+        # Arena start button
+        self.start_arena_button = tk.CTkButton(main_frame, text="Arena Start", command=self.run_arena_process)
+        self.start_arena_button.grid(pady=(5, 15), padx=10, sticky="ew")
+
+        # Logger frame to track log (Unchanged as per request)
         self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=200, width=400)
         self.log_frame.grid_columnconfigure(0, weight=1)
         self.log_frame.grid_rowconfigure(0, weight=1)
-        self.log_frame.grid(pady=10, padx=10)
+        self.log_frame.grid(pady=(10, 10), padx=10, sticky="nsew")
 
     # Function to change button state and run or terminate process in thread
     def run_main_process(self):
@@ -81,9 +101,9 @@ class MainWindow(tk.CTk):
             self.check_shutdown_flag_in_thread()
 
     def run_arena_process(self):
-        if self.start_arena_button.cget("text") == "Arena_Start":
+        if self.start_arena_button.cget("text") == "Arena Start":
             self.thread_shutdown.clear()
-            self.thread = threading.Thread(target=self.start_arena_process(), daemon=True)
+            self.thread = threading.Thread(target=self.start_arena_process, daemon=True)
             self.thread.start()
         else:
             self.start_button.configure(state="disabled")
@@ -94,13 +114,14 @@ class MainWindow(tk.CTk):
     def start_arena_process(self):
         self.reset_frame(self.log_frame)
         self.create_log_label("####### Process Starting #######")
-        # total_iteration = int(self.iteration_entry.get())
+        total_arena_run = int(self.arena_count.get())
+        arena_with_extra = bool(self.arena_checkbox.get())
         self.top_label.configure(text="Iteration started")
         self.start_button.configure(text="Stop")
-        self.start_arena_automation_iteration()
+        self.start_arena_automation_iteration(total_arena_run, arena_with_extra)
 
-    def start_arena_automation_iteration(self):
-        self.daily_arena.arena_automation()
+    def start_arena_automation_iteration(self,total_arena_run,arena_with_extra):
+        self.daily_arena.arena_automation(total_arena_run, arena_with_extra)
 
     # Use for unlocking the button from disabled state
     def check_shutdown_flag_in_thread(self):

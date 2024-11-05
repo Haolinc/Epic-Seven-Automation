@@ -22,9 +22,13 @@ class DailyArena:
         self.utilities = utilities
 
     def select_arena(self):
-        self.utilities.wait_for_button_and_click(arena_icon,"find arena_icon")
-        self.utilities.wait_for_button_and_click(arena,"find arena")
-        self.utilities.wait_for_button_and_click(NPC_challenge, "find npc challenge")
+        if not self.utilities.wait_for_button_and_click_bool(arena_icon,"find arena_icon"):
+            print("Failed to find image. try next button")
+            if not self.utilities.wait_for_button_and_click_bool(arena,"find arena"):
+                print("Failed to find image. try next button")
+                if not self.utilities.wait_for_button_and_click_bool(NPC_challenge, "find npc challenge"):
+                    print("Failed to find image. loop end here")
+
 
     def challenge_opponent(self):
         self.utilities.wait_for_button_and_click(NPC_icon, "find NPC_icon")
@@ -43,17 +47,13 @@ class DailyArena:
         if self.utilities.find_image(self.utilities.get_numpy_screenshot(), do_not_display) is not None:
             self.utilities.wait_for_button_and_click(do_not_display, "Do_Not_Display_Button")
 
-    def arena_automation (self, battle_count = 4):
+    def arena_automation (self, battle_count = 5, with_extra = False):
         self.utilities.click_center_of_screen()
         self.select_arena()
+        if with_extra:
+            battle_count += 5
+            print(battle_count)
+            self.buy_extra_flag()
         for _ in range(battle_count):
-            self.challenge_opponent()
-            time.sleep(3)
-
-    def arena_automation_with_extra (self, battle_count = 4) :
-        self.utilities.click_center_of_screen()
-        self.select_arena()
-        self.buy_extra_flag()
-        for _ in range(battle_count + 5):
             self.challenge_opponent()
             time.sleep(3)
