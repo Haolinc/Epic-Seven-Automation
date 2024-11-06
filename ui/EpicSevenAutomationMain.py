@@ -2,7 +2,7 @@ import threading
 import time
 import customtkinter as tk
 
-from Utils import Utils
+from automation.ShopRefresh import ShopRefresh
 from automation.Utilities import Utilities
 from automation.DailyArena import DailyArena
 
@@ -14,11 +14,11 @@ class MainWindow(tk.CTk):
     mystic_count: int = 0
     thread: threading.Thread()
     thread_shutdown = threading.Event()
-    utils: Utils = None
+    shop_refresh: ShopRefresh = None
     utilities: Utilities = None
     daily_arena: DailyArena = None
 
-    def __init__(self, utils: Utils, utilities: Utilities):
+    def __init__(self, utilities: Utilities):
         super().__init__()
         self.log_frame = None
         self.iteration_entry = None
@@ -30,7 +30,7 @@ class MainWindow(tk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.geometry("500x500")
-        self.utils = utils
+        self.shop_refresh = ShopRefresh(utilities)
         self.daily_arena = DailyArena(utilities)
         self.create_main_widgets()
         utilities.save_image()
@@ -155,8 +155,8 @@ class MainWindow(tk.CTk):
         frame.update()
 
     def check_bookmark_and_update_log(self):
-        if self.utils.check_covenant():
-            if self.utils.buy_covenant():
+        if self.shop_refresh.check_covenant():
+            if self.shop_refresh.buy_covenant():
                 self.create_log_label("Found Covenant Bookmark!")
                 self.covenant_count += 5
                 self.covenant_count_label.configure(text="Total Covenant: " + str(self.covenant_count))
@@ -166,8 +166,8 @@ class MainWindow(tk.CTk):
                 self.thread_shutdown.set()
                 self.check_shutdown_flag_in_thread()
                 return
-        if self.utils.check_mystic():
-            if self.utils.buy_mystic():
+        if self.shop_refresh.check_mystic():
+            if self.shop_refresh.buy_mystic():
                 self.create_log_label("Found Mystic Bookmark!")
                 self.mystic_count += 50
                 self.mystic_count_label.configure(text="Total Mystic: " + str(self.mystic_count))
@@ -181,14 +181,14 @@ class MainWindow(tk.CTk):
         for current_iteration in range(0, total_iteration):
             self.create_log_label(f"--------Iteration: {current_iteration + 1}--------")
             self.check_bookmark_and_update_log()
-            self.utils.swipe_down()
+            self.shop_refresh.swipe_down()
             time.sleep(0.5)
             self.check_bookmark_and_update_log()
             if self.thread_shutdown.is_set():
                 self.create_log_label("####### Process Stopped #######")
                 return
             # When refresh failed, Stop the application
-            if not self.utils.refresh_shop():
+            if not self.shop_refresh.refresh_shop():
                 self.create_log_label("Refresh Shop Fail, Stopping the application")
                 self.thread_shutdown.set()
                 self.check_shutdown_flag_in_thread()
