@@ -99,7 +99,6 @@ class ShopRefresh:
     def start_store_fresh_iteration(self, total_iteration: int):
         for current_iteration in range(0, total_iteration):
             self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration + 1}--------")
-            self.ui_listener.set_label_text(label_enum=LabelEnum.TOP, text="swapped")
             self.check_bookmark_and_update_log()
             self.swipe_down()
             time.sleep(0.5)
