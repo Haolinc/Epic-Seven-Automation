@@ -5,6 +5,8 @@ import customtkinter as tk
 from automation.ShopRefresh import ShopRefresh
 from automation.Utilities import Utilities
 from automation.DailyArena import DailyArena
+import ui.UIHelper as UIHelper
+from ui.UIComponentEnum import LabelEnum, ButtonEnum
 
 tk.set_appearance_mode("System")
 
@@ -30,7 +32,7 @@ class MainWindow(tk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.geometry("500x500")
-        self.shop_refresh = ShopRefresh(utilities)
+        self.shop_refresh = ShopRefresh(utilities, Listener(self))
         self.daily_arena = DailyArena(utilities)
         self.create_main_widgets()
         utilities.save_image()
@@ -59,8 +61,8 @@ class MainWindow(tk.CTk):
         self.iteration_entry.grid(pady=5, padx=10, sticky="ew")
 
         # Start button
-        self.start_button = tk.CTkButton(main_frame, text="Start", command=self.run_main_process)
-        self.start_button.grid(pady=(5, 15), padx=10, sticky="ew")
+        self.start_shop_refresh_button = tk.CTkButton(main_frame, text="Start", command=self.run_main_process)
+        self.start_shop_refresh_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Arena options
         arena_label = tk.CTkLabel(main_frame, text="Arena Settings", anchor="w", font=("Arial", 12, "bold"))
@@ -90,13 +92,13 @@ class MainWindow(tk.CTk):
 
     # Function to change button state and run or terminate process in thread
     def run_main_process(self):
-        if self.start_button.cget("text") == "Start":
+        if self.start_shop_refresh_button.cget("text") == "Start":
             self.thread_shutdown.clear()
             self.thread = threading.Thread(target=self.start_process, daemon=True)
             self.thread.start()
         else:
-            self.start_button.configure(state="disabled")
-            self.create_log_label("####### Process Stopping, Please Wait #######")
+            self.start_shop_refresh_button.configure(state="disabled")
+            UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
             self.thread_shutdown.set()
             self.check_shutdown_flag_in_thread()
 
@@ -106,21 +108,21 @@ class MainWindow(tk.CTk):
             self.thread = threading.Thread(target=self.start_arena_process, daemon=True)
             self.thread.start()
         else:
-            self.start_button.configure(state="disabled")
-            self.create_log_label("####### Process Stopping, Please Wait #######")
+            self.start_shop_refresh_button.configure(state="disabled")
+            UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
             self.thread_shutdown.set()
             self.check_shutdown_flag_in_thread()
 
     def start_arena_process(self):
-        self.reset_frame(self.log_frame)
-        self.create_log_label("####### Process Starting #######")
+        UIHelper.reset_frame(self.log_frame)
+        UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Starting #######")
         total_arena_run = int(self.arena_count.get())
         arena_with_extra = bool(self.arena_checkbox.get())
         self.top_label.configure(text="Iteration started")
-        self.start_button.configure(text="Stop")
+        self.start_shop_refresh_button.configure(text="Stop")
         self.start_arena_automation_iteration(total_arena_run, arena_with_extra)
 
-    def start_arena_automation_iteration(self,total_arena_run,arena_with_extra):
+    def start_arena_automation_iteration(self, total_arena_run, arena_with_extra):
         self.daily_arena.arena_automation(total_arena_run, arena_with_extra)
 
     # Use for unlocking the button from disabled state
@@ -131,73 +133,47 @@ class MainWindow(tk.CTk):
             self.reset_widgets()
 
     def reset_widgets(self):
-        self.start_button.configure(state="normal")
-        self.start_button.configure(text="Start")
+        self.start_shop_refresh_button.configure(state="normal")
+        self.start_shop_refresh_button.configure(text="Start")
         self.top_label.configure(text="Please enter the total iterations you want to run")
 
     # Starts the process,
     def start_process(self):
-        self.reset_frame(self.log_frame)
-        self.create_log_label("####### Process Starting #######")
+        UIHelper.reset_frame(self.log_frame)
+        UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Starting #######")
         total_iteration = int(self.iteration_entry.get())
         self.top_label.configure(text="Iteration started")
-        self.start_button.configure(text="Stop")
-        self.start_store_fresh_iteration(total_iteration)
-
-    def create_log_label(self, text: str):
-        test_label = tk.CTkLabel(self.log_frame, text=text)
-        test_label.grid(sticky="nsew")
-        self.log_frame._parent_canvas.yview_moveto(1.0)
-
-    def reset_frame(self, frame: tk.CTkScrollableFrame | tk.CTkFrame):
-        for widget in list(frame.children.values()):
-            widget.destroy()
-        frame.update()
-
-    def check_bookmark_and_update_log(self):
-        if self.shop_refresh.check_covenant():
-            if self.shop_refresh.buy_covenant():
-                self.create_log_label("Found Covenant Bookmark!")
-                self.covenant_count += 5
-                self.covenant_count_label.configure(text="Total Covenant: " + str(self.covenant_count))
-            # This only happens when multiple retry attempt fails
-            else:
-                self.create_log_label("Covenant Purchase Fail, Stopping the application")
-                self.thread_shutdown.set()
-                self.check_shutdown_flag_in_thread()
-                return
-        if self.shop_refresh.check_mystic():
-            if self.shop_refresh.buy_mystic():
-                self.create_log_label("Found Mystic Bookmark!")
-                self.mystic_count += 50
-                self.mystic_count_label.configure(text="Total Mystic: " + str(self.mystic_count))
-            # This only happens when multiple retry attempt fails
-            else:
-                self.create_log_label("Mystic Purchase Fail, Stopping the application")
-                self.thread_shutdown.set()
-                self.check_shutdown_flag_in_thread()
-
-    def start_store_fresh_iteration(self, total_iteration: int):
-        for current_iteration in range(0, total_iteration):
-            self.create_log_label(f"--------Iteration: {current_iteration + 1}--------")
-            self.check_bookmark_and_update_log()
-            self.shop_refresh.swipe_down()
-            time.sleep(0.5)
-            self.check_bookmark_and_update_log()
-            if self.thread_shutdown.is_set():
-                self.create_log_label("####### Process Stopped #######")
-                return
-            # When refresh failed, Stop the application
-            if not self.shop_refresh.refresh_shop():
-                self.create_log_label("Refresh Shop Fail, Stopping the application")
-                self.thread_shutdown.set()
-                self.check_shutdown_flag_in_thread()
-                return
-        # Check again for last refresh
-        self.check_bookmark_and_update_log()
-        self.create_log_label("####### Process Stopped #######")
-        self.thread_shutdown.set()
-        self.check_shutdown_flag_in_thread()
+        self.start_shop_refresh_button.configure(text="Stop")
+        self.shop_refresh.start_store_fresh_iteration(total_iteration)
 
     def launch(self):
         self.mainloop()
+
+
+class Listener:
+    def __init__(self, parent: MainWindow):
+        self.parent = parent
+
+    def add_label_to_log_frame(self, text: str):
+        UIHelper.add_label_to_frame(frame=self.parent.log_frame, text=text)
+
+    def reset_log_frame(self):
+        UIHelper.reset_frame(frame=self.parent.log_frame)
+
+    def set_label_text(self, label_enum: LabelEnum, text: str):
+        self.parent.__getattribute__(label_enum.value).configure(text=text)
+
+    def set_button_text(self, button_enum: ButtonEnum, text: str):
+        self.parent.__getattribute__(button_enum.value).configure(text=text)
+
+    def check_shutdown_flag_in_thread(self):
+        self.parent.check_shutdown_flag_in_thread()
+
+    def set_shutdown_flag_status(self, is_shutdown: bool):
+        if is_shutdown:
+            self.parent.thread_shutdown.set()
+        else:
+            self.parent.thread_shutdown.clear()
+
+    def check_shutdown_flag_status(self) -> bool:
+        return self.parent.thread_shutdown.is_set()
