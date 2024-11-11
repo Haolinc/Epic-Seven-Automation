@@ -1,3 +1,4 @@
+import threading
 import time
 
 import aircv as ac
@@ -18,6 +19,8 @@ refresh_confirm = ac.imread(PathConverter.get_current_path("image\\shop_refresh_
 
 
 class ShopRefresh:
+    thread_shutdown = threading.Event()
+
     def __init__(self, utilities: Utilities, listener):
         self.utilities = utilities
         self.covenant_count = 0
@@ -81,8 +84,7 @@ class ShopRefresh:
             # This only happens when multiple retry attempt fails
             else:
                 self.ui_listener.add_label_to_log_frame(text="Covenant Purchase Fail, Stopping the application")
-                self.ui_listener.set_shutdown_flag_status(True)
-                self.ui_listener.check_shutdown_flag_in_thread()
+                self.stop_shop_refresh()
                 return
         if self.check_mystic():
             if self.buy_mystic():
@@ -93,31 +95,41 @@ class ShopRefresh:
             # This only happens when multiple retry attempt fails
             else:
                 self.ui_listener.add_label_to_log_frame(text="Mystic Purchase Fail, Stopping the application")
-                self.ui_listener.set_shutdown_flag_status(True)
-                self.ui_listener.check_shutdown_flag_in_thread()
+                self.stop_shop_refresh()
 
-    def start_store_fresh_iteration(self, total_iteration: int):
-        for current_iteration in range(0, total_iteration):
-            self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration + 1}--------")
+    def start_store_fresh_iteration(self):
+        total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.SHOP_REFRESH_COUNT_ENTRY)
+        current_iteration = 1
+        self.ui_listener.reset_log_frame()
+        while current_iteration <= total_iteration and not self.thread_shutdown.is_set():
+            self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration}--------")
             self.check_bookmark_and_update_log()
-            self.swipe_down()
+            if self.thread_shutdown.is_set():
+                break
+            self.utilities.swipe_down()
             time.sleep(0.5)
             self.check_bookmark_and_update_log()
-            if self.ui_listener.check_shutdown_flag_status():
-                self.ui_listener.add_label_to_log_frame(text="####### Process Stopped #######")
-                return
+            # Check shutdown signal before refresh
+            if self.thread_shutdown.is_set():
+                break
             # When refresh failed, Stop the application
             if not self.refresh_shop():
                 self.ui_listener.add_label_to_log_frame(text="Refresh Shop Fail, Stopping the application")
-                self.ui_listener.set_shutdown_flag_status(True)
-                self.ui_listener.check_shutdown_flag_in_thread()
-                return
-        # Check again for last refresh
-        self.check_bookmark_and_update_log()
+                break
+            current_iteration += 1
+        # Check again for last refresh ONLY when thread is not exiting
+        if not self.thread_shutdown.is_set():
+            self.check_bookmark_and_update_log()
+            self.utilities.swipe_down()
+            time.sleep(0.5)
+            self.check_bookmark_and_update_log()
         self.ui_listener.add_label_to_log_frame(text="####### Process Stopped #######")
-        self.ui_listener.set_shutdown_flag_status(True)
-        self.ui_listener.check_shutdown_flag_in_thread()
+        self.ui_listener.reset_ui_component(UIComponent.SHOP_REFRESH)
 
-    # temporary function holder
-    def swipe_down(self):
-        self.utilities.swipe_down()
+    def start_shop_refresh_with_thread(self):
+        self.thread_shutdown.clear()
+        self.utilities.start_function_in_thread(self.start_store_fresh_iteration)
+
+    def stop_shop_refresh(self):
+        self.thread_shutdown.set()
+

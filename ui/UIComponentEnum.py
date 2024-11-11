@@ -11,3 +11,13 @@ class LabelEnum(Enum):
 class ButtonEnum(Enum):
     SHOP_REFRESH_START = 'start_shop_refresh_button'
     ARENA_START = 'start_arena_button'
+
+
+class EntryEnum(Enum):
+    SHOP_REFRESH_COUNT_ENTRY = 'refresh_shop_count_entry'
+    ARENA_COUNT_ENTRY = 'arena_count'
+
+
+class UIComponent(Enum):
+    SHOP_REFRESH = "SHOP"
+    ARENA = "ARENA"

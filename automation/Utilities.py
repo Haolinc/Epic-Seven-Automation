@@ -1,3 +1,4 @@
+import threading
 import time
 import adbutils
 import aircv as ac
@@ -84,3 +85,6 @@ class Utilities:
             self.swipe_down()  # Need to click at least once if another expedition popping up
             return True
         return False
+
+    def start_function_in_thread(self, function):
+        threading.Thread(target=function, daemon=True).start()

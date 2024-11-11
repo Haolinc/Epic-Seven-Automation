@@ -4,7 +4,7 @@ from automation.DailyArena import DailyArena
 from automation.ShopRefresh import ShopRefresh
 from automation.Utilities import Utilities
 import ui.UIHelper as UIHelper
-from ui.UIComponentEnum import LabelEnum, ButtonEnum
+from ui.UIComponentEnum import *
 
 tk.set_appearance_mode("System")
 
@@ -19,7 +19,7 @@ class MainWindow(tk.CTk):
     def __init__(self, utilities: Utilities):
         super().__init__()
         self.log_frame = None
-        self.iteration_entry = None
+        self.refresh_shop_count_entry = None
         self.arena_count = None
         self.top_label = None
         self.mystic_count_label = None
@@ -53,11 +53,12 @@ class MainWindow(tk.CTk):
         # Label and input for iterations
         self.top_label = tk.CTkLabel(main_frame, text="Enter Total Iterations", anchor="w")
         self.top_label.grid(pady=(10, 5), padx=10, sticky="ew")
-        self.iteration_entry = tk.CTkEntry(main_frame, placeholder_text="Refresh Count")
-        self.iteration_entry.grid(pady=5, padx=10, sticky="ew")
+        self.refresh_shop_count_entry = tk.CTkEntry(main_frame, placeholder_text="Refresh Count")
+        self.refresh_shop_count_entry.grid(pady=5, padx=10, sticky="ew")
 
         # Start button
-        self.start_shop_refresh_button = tk.CTkButton(main_frame, text="Start", command=self.run_main_process)
+        self.start_shop_refresh_button = tk.CTkButton(main_frame, text="Start Shop Refresh",
+                                                      command=self.run_shop_refresh_process)
         self.start_shop_refresh_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Arena options
@@ -77,7 +78,7 @@ class MainWindow(tk.CTk):
         self.arena_checkbox.grid(pady=5, padx=10, sticky="w")
 
         # Arena start button
-        self.start_arena_button = tk.CTkButton(main_frame, text="Arena Start", command=self.run_arena_process)
+        self.start_arena_button = tk.CTkButton(main_frame, text="Start Arena", command=self.run_arena_process)
         self.start_arena_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Logger frame to track log (Unchanged as per request)
@@ -87,24 +88,22 @@ class MainWindow(tk.CTk):
         self.log_frame.grid(pady=(10, 10), padx=10, sticky="nsew")
 
     # Function to change button state and run or terminate process in thread
-    def run_main_process(self):
-        if self.start_shop_refresh_button.cget("text") == "Start":
-            self.thread_shutdown.clear()
-            self.thread = threading.Thread(target=self.start_process, daemon=True)
-            self.thread.start()
+    def run_shop_refresh_process(self):
+        if self.start_shop_refresh_button.cget("text") == "Start Shop Refresh":
+            self.start_shop_refresh_button.configure(text="Stop Shop Refresh")
+            self.shop_refresh.start_shop_refresh_with_thread()
         else:
             self.start_shop_refresh_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
-            self.thread_shutdown.set()
-            self.check_shutdown_flag_in_thread()
+            self.shop_refresh.stop_shop_refresh()
 
     def run_arena_process(self):
-        if self.start_arena_button.cget("text") == "Arena Start":
+        if self.start_arena_button.cget("text") == "Start Arena":
             self.thread_shutdown.clear()
             self.thread = threading.Thread(target=self.start_arena_process, daemon=True)
             self.thread.start()
         else:
-            self.start_shop_refresh_button.configure(state="disabled")
+            self.start_arena_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
             self.thread_shutdown.set()
             self.check_shutdown_flag_in_thread()
@@ -122,25 +121,18 @@ class MainWindow(tk.CTk):
         self.daily_arena.arena_automation(total_arena_run, arena_with_extra)
 
     # Use for unlocking the button from disabled state
+    # REMOVE THIS FUNCTION AFTER ARENA THREAD REFACTOR !!!!!!!!!!
     def check_shutdown_flag_in_thread(self):
         if self.thread.is_alive():
             self.after(100, self.check_shutdown_flag_in_thread)
         else:
             self.reset_widgets()
 
+    # REMOVE THIS FUNCTION AFTER ARENA THREAD REFACTOR !!!!!!!!!!
     def reset_widgets(self):
         self.start_shop_refresh_button.configure(state="normal")
         self.start_shop_refresh_button.configure(text="Start")
         self.top_label.configure(text="Please enter the total iterations you want to run")
-
-    # Starts the process,
-    def start_process(self):
-        UIHelper.reset_frame(self.log_frame)
-        UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Starting #######")
-        total_iteration = int(self.iteration_entry.get())
-        self.top_label.configure(text="Iteration started")
-        self.start_shop_refresh_button.configure(text="Stop")
-        self.shop_refresh.start_store_fresh_iteration(total_iteration)
 
     def launch(self):
         self.mainloop()
@@ -162,14 +154,16 @@ class Listener:
     def set_button_text(self, button_enum: ButtonEnum, text: str):
         self.parent.__getattribute__(button_enum.value).configure(text=text)
 
-    def check_shutdown_flag_in_thread(self):
-        self.parent.check_shutdown_flag_in_thread()
+    def reset_ui_component(self, ui_component: UIComponent):
+        match ui_component:
+            case UIComponent.SHOP_REFRESH:
+                self.parent.start_shop_refresh_button.configure(state="normal")
+                self.parent.start_shop_refresh_button.configure(text="Start Shop Refresh")
+            case UIComponent.ARENA:
+                self.parent.start_arena_button.configure(state="normal")
+                self.parent.start_arena_button.configure(text="Start Arena")
+            case _:
+                print("No Valid UIComponent Found")
 
-    def set_shutdown_flag_status(self, is_shutdown: bool):
-        if is_shutdown:
-            self.parent.thread_shutdown.set()
-        else:
-            self.parent.thread_shutdown.clear()
-
-    def check_shutdown_flag_status(self) -> bool:
-        return self.parent.thread_shutdown.is_set()
+    def get_entry_count(self, entry_enum: EntryEnum) -> int:
+        return int(self.parent.__getattribute__(entry_enum.value).get())
