@@ -1,10 +1,8 @@
 import threading
-import time
 import customtkinter as tk
-
+from automation.DailyArena import DailyArena
 from automation.ShopRefresh import ShopRefresh
 from automation.Utilities import Utilities
-from automation.DailyArena import DailyArena
 import ui.UIHelper as UIHelper
 from ui.UIComponentEnum import LabelEnum, ButtonEnum
 
@@ -12,8 +10,6 @@ tk.set_appearance_mode("System")
 
 
 class MainWindow(tk.CTk):
-    covenant_count: int = 0
-    mystic_count: int = 0
     thread: threading.Thread()
     thread_shutdown = threading.Event()
     shop_refresh: ShopRefresh = None
