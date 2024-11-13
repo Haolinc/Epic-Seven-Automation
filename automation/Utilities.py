@@ -1,3 +1,4 @@
+import threading
 import time
 import adbutils
 import aircv as ac
@@ -17,7 +18,7 @@ class Utilities:
         return numpy.array(self.device.screenshot())
 
     def find_image(self, source_img, target_img) -> dict[any, any]:
-        return ac.find_template(source_img, target_img, 0.95)
+        return ac.find_template(source_img, target_img, 0.90)
 
     def save_image(self):
         self.device.screenshot().save("some.png")
@@ -84,3 +85,6 @@ class Utilities:
             self.swipe_down()  # Need to click at least once if another expedition popping up
             return True
         return False
+
+    def start_function_in_thread(self, function):
+        threading.Thread(target=function, daemon=True).start()
