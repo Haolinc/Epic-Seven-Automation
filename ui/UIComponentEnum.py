@@ -15,8 +15,10 @@ class ButtonEnum(Enum):
 
 class EntryEnum(Enum):
     SHOP_REFRESH_COUNT_ENTRY = 'refresh_shop_count_entry'
-    ARENA_COUNT_ENTRY = 'arena_count'
+    ARENA_COUNT_ENTRY = 'arena_count_entry'
 
+class CheckBoxEnum(Enum):
+    ARENA_WITH_FRIENDSHIP = 'arena_with_extra'
 
 class UIComponent(Enum):
     SHOP_REFRESH = "SHOP"
