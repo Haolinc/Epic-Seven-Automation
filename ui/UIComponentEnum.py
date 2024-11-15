@@ -7,11 +7,9 @@ class LabelEnum(Enum):
     TOP = 'top_label'
     ARENA = 'arena_label'
 
-
 class ButtonEnum(Enum):
     SHOP_REFRESH_START = 'start_shop_refresh_button'
     ARENA_START = 'start_arena_button'
-
 
 class EntryEnum(Enum):
     SHOP_REFRESH_COUNT_ENTRY = 'refresh_shop_count_entry'

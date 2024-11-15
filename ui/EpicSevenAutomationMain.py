@@ -26,12 +26,16 @@ class MainWindow(tk.CTk):
         self.top_label = None
         self.mystic_count_label = None
         self.covenant_count_label = None
-        self.title("E7 Secret Shop Auto")
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.geometry("500x500")
         self.shop_refresh = ShopRefresh(utilities, Listener(self))
         self.daily_arena = DailyArena(utilities, Listener(self))
+
+        # Set window size and title
+        self.title("E7 Secret Shop Auto")
+        self.geometry("500x630")
+        self.resizable(False,False)
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
         self.create_main_widgets()
         utilities.save_image()
 
@@ -84,10 +88,10 @@ class MainWindow(tk.CTk):
         self.start_arena_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Logger frame to track log (Unchanged as per request)
-        self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=200, width=400)
+        self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=250, width=500)
         self.log_frame.grid_columnconfigure(0, weight=1)
         self.log_frame.grid_rowconfigure(0, weight=1)
-        self.log_frame.grid(pady=(10, 10), padx=10, sticky="nsew")
+        self.log_frame.grid(padx=10, sticky="nsew")
 
     # Function to change button state and run or terminate process in thread
     def run_shop_refresh_process(self):
@@ -102,12 +106,10 @@ class MainWindow(tk.CTk):
     def run_arena_process(self):
         if self.start_arena_button.cget("text") == "Start Arena":
             self.start_arena_button.configure(text="Stop Arena Automation")
-            self.start_arena_button.update()
-            print(self.start_arena_button.cget("text"))
             self.daily_arena.daily_arena_with_thread()
         else:
             self.start_arena_button.configure(state="disabled")
-            UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
+            UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait for this iteration to end #######")
             self.daily_arena.stop_daily_arena()
 
     # Use for unlocking the button from disabled state

@@ -58,13 +58,14 @@ class DailyArena:
             self.buy_extra_flag()
         self.ui_listener.add_label_to_log_frame(text=f"--------Starting {total_iteration} npc challenge--------")
         for current_iteration in range(total_iteration):
-
             if self.thread_shutdown.is_set():
+                self.ui_listener.add_label_to_log_frame(text="####### Process Stopped #######")
+                self.ui_listener.reset_ui_component(UIComponent.ARENA)
                 break
-
-            self.challenge_opponent()
             self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration+1}--------")
+            self.challenge_opponent()
             time.sleep(3)
+            self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration+1} ended--------")
         self.stop_daily_arena()
 
     def daily_arena_with_thread(self):
@@ -75,4 +76,3 @@ class DailyArena:
         self.thread_shutdown.set()
         if self.thread.is_alive():
             self.thread.join()
-        self.ui_listener.add_label_to_log_frame(text="####### Process Stopping #######")
