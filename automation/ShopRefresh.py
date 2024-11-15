@@ -32,14 +32,14 @@ class ShopRefresh:
                                          target_img=covenant) is not None
 
     def buy_covenant(self) -> bool:
-        if not self.utilities.shop_refresh_click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                        target_img=covenant_buy,
-                                                        identifier="buy covenant in store page"):
+        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
+                                                 target_img=covenant_buy,
+                                                 identifier="buy covenant in store page"):
             return False
         time.sleep(0.2)  # Delay is for animation
-        if not self.utilities.shop_refresh_click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                        target_img=covenant_buy_confirmation,
-                                                        identifier="buy covenant in confirmation page"):
+        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
+                                                 target_img=covenant_buy_confirmation,
+                                                 identifier="buy covenant in confirmation page"):
             return False
         time.sleep(0.2)
         return True
@@ -49,27 +49,27 @@ class ShopRefresh:
                                          target_img=mystic) is not None
 
     def buy_mystic(self) -> bool:
-        if not self.utilities.shop_refresh_click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                        target_img=mystic_buy,
-                                                        identifier="buy mystic in store page"):
+        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
+                                                 target_img=mystic_buy,
+                                                 identifier="buy mystic in store page"):
             return False
         time.sleep(0.2)  # Delay is for animation
-        if not self.utilities.shop_refresh_click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                        target_img=mystic_buy_confirmation,
-                                                        identifier="buy mystic in confirmation page"):
+        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
+                                                 target_img=mystic_buy_confirmation,
+                                                 identifier="buy mystic in confirmation page"):
             return False
         time.sleep(0.2)
         return True
 
     def refresh_shop(self) -> bool:
-        if not self.utilities.shop_refresh_click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                        target_img=refresh,
-                                                        identifier="refresh in store page"):
+        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
+                                                 target_img=refresh,
+                                                 identifier="refresh in store page"):
             return False
         time.sleep(0.2)  # Delay is for animation
-        if not self.utilities.shop_refresh_click_target(source_img=self.utilities.get_numpy_screenshot(),
-                                                        target_img=refresh_confirm,
-                                                        identifier="refresh in confirmation page"):
+        if not self.utilities.click_target(source_img=self.utilities.get_numpy_screenshot(),
+                                                 target_img=refresh_confirm,
+                                                 identifier="refresh in confirmation page"):
             return False
         time.sleep(0.2)
         return True
@@ -128,7 +128,7 @@ class ShopRefresh:
 
     def start_shop_refresh_with_thread(self):
         self.thread_shutdown.clear()
-        self.utilities.start_function_in_thread(self.start_store_fresh_iteration)
+        threading.Thread(target=self.start_store_fresh_iteration, daemon=True).start()
 
     def stop_shop_refresh(self):
         self.thread_shutdown.set()

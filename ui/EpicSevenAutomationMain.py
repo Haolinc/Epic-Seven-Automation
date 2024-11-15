@@ -20,16 +20,22 @@ class MainWindow(tk.CTk):
         super().__init__()
         self.log_frame = None
         self.refresh_shop_count_entry = None
-        self.arena_count = None
+        self.arena_count_entry = None
+        self.arena_checkbox = None
+        self.arena_with_extra = None
         self.top_label = None
         self.mystic_count_label = None
         self.covenant_count_label = None
+        self.shop_refresh = ShopRefresh(utilities, Listener(self))
+        self.daily_arena = DailyArena(utilities, Listener(self))
+
+        # Set window size and title
         self.title("E7 Secret Shop Auto")
+        self.geometry("500x630")
+        self.resizable(False,False)
+
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        self.geometry("500x500")
-        self.shop_refresh = ShopRefresh(utilities, Listener(self))
-        self.daily_arena = DailyArena(utilities)
         self.create_main_widgets()
         utilities.save_image()
 
@@ -65,8 +71,8 @@ class MainWindow(tk.CTk):
         arena_label = tk.CTkLabel(main_frame, text="Arena Settings", anchor="w", font=("Arial", 12, "bold"))
         arena_label.grid(pady=(10, 5), padx=10, sticky="w")
 
-        self.arena_count = tk.CTkEntry(main_frame, placeholder_text="Arena Count")
-        self.arena_count.grid(pady=5, padx=10, sticky="ew")
+        self.arena_count_entry = tk.CTkEntry(main_frame, placeholder_text="Arena Count")
+        self.arena_count_entry.grid(pady=5, padx=10, sticky="ew")
         self.arena_with_extra = tk.BooleanVar(value=False)
         self.arena_checkbox = tk.CTkCheckBox(
             main_frame,
@@ -82,10 +88,10 @@ class MainWindow(tk.CTk):
         self.start_arena_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Logger frame to track log (Unchanged as per request)
-        self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=200, width=400)
+        self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=250, width=500)
         self.log_frame.grid_columnconfigure(0, weight=1)
         self.log_frame.grid_rowconfigure(0, weight=1)
-        self.log_frame.grid(pady=(10, 10), padx=10, sticky="nsew")
+        self.log_frame.grid(padx=10, sticky="nsew")
 
     # Function to change button state and run or terminate process in thread
     def run_shop_refresh_process(self):
@@ -99,26 +105,12 @@ class MainWindow(tk.CTk):
 
     def run_arena_process(self):
         if self.start_arena_button.cget("text") == "Start Arena":
-            self.thread_shutdown.clear()
-            self.thread = threading.Thread(target=self.start_arena_process, daemon=True)
-            self.thread.start()
+            self.start_arena_button.configure(text="Stop Arena Automation")
+            self.daily_arena.daily_arena_with_thread()
         else:
             self.start_arena_button.configure(state="disabled")
-            UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
-            self.thread_shutdown.set()
-            self.check_shutdown_flag_in_thread()
-
-    def start_arena_process(self):
-        UIHelper.reset_frame(self.log_frame)
-        UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Starting #######")
-        total_arena_run = int(self.arena_count.get())
-        arena_with_extra = bool(self.arena_checkbox.get())
-        self.top_label.configure(text="Iteration started")
-        self.start_shop_refresh_button.configure(text="Stop")
-        self.start_arena_automation_iteration(total_arena_run, arena_with_extra)
-
-    def start_arena_automation_iteration(self, total_arena_run, arena_with_extra):
-        self.daily_arena.arena_automation(total_arena_run, arena_with_extra)
+            UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait for this iteration to end #######")
+            self.daily_arena.stop_daily_arena()
 
     # Use for unlocking the button from disabled state
     # REMOVE THIS FUNCTION AFTER ARENA THREAD REFACTOR !!!!!!!!!!
@@ -167,3 +159,6 @@ class Listener:
 
     def get_entry_count(self, entry_enum: EntryEnum) -> int:
         return int(self.parent.__getattribute__(entry_enum.value).get())
+
+    def get_checkbox_bool(self, check_box_enum: CheckBoxEnum) -> bool:
+        return bool(self.parent.__getattribute__(check_box_enum.value).get())

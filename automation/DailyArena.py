@@ -1,8 +1,10 @@
 import aircv as ac
 import PathConverter
 import time
+import threading
 
 from automation.Utilities import Utilities
+from ui.UIComponentEnum import *
 
 arena_icon = ac.imread(PathConverter.get_current_path("image\\arena_asset", "Arena_Icon.png"))
 arena = ac.imread(PathConverter.get_current_path("image\\arena_asset", "Arena.png"))
@@ -18,24 +20,24 @@ auto_battle_button = ac.imread((PathConverter.get_current_path("image\\arena_ass
 confirm_Button = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Confirm_Button.png")))
 
 class DailyArena:
-    def __init__(self, utilities: Utilities):
+    thread_shutdown = threading.Event()
+
+    def __init__(self, utilities: Utilities, listener):
         self.utilities = utilities
+        self.ui_listener = listener
 
     def select_arena(self):
-        if not self.utilities.wait_for_button_and_click_bool(arena_icon,"find arena_icon"):
-            print("Failed to find image. try next button")
-            if not self.utilities.wait_for_button_and_click_bool(arena,"find arena"):
-                print("Failed to find image. try next button")
-                if not self.utilities.wait_for_button_and_click_bool(NPC_challenge, "find npc challenge"):
-                    print("Failed to find image. loop end here")
-
+        if not self.utilities.wait_for_button_and_click_bool(arena,"find arena"):
+            self.ui_listener.add_label_to_log_frame("failed to find find arena, trying for next button")
+            if not self.utilities.wait_for_button_and_click_bool(NPC_challenge, "find npc challenge"):
+                self.ui_listener.add_label_to_log_frame("failed to find npc challenge, iteration stop")
 
     def challenge_opponent(self):
         self.utilities.wait_for_button_and_click(NPC_icon, "find NPC_icon")
         self.utilities.wait_for_button_and_click(challenge_button, "find challenge_button")
         self.utilities.wait_for_button_and_click(start_button, "find start button")
         self.gear_check_notification()
-        self.utilities.wait_for_button_and_click(auto_battle_button, "find auto_battle_button", 10)
+        self.utilities.wait_for_button_and_click(auto_battle_button, "find auto_battle_button", 10, False)
         self.utilities.wait_for_button_and_click(confirm_Button, "find confirm_Button",60)
 
     def buy_extra_flag(self):
@@ -47,13 +49,30 @@ class DailyArena:
         if self.utilities.find_image(self.utilities.get_numpy_screenshot(), do_not_display) is not None:
             self.utilities.wait_for_button_and_click(do_not_display, "Do_Not_Display_Button")
 
-    def arena_automation (self, battle_count = 5, with_extra = False):
-        self.utilities.click_center_of_screen()
+    def arena_automation (self):
+        total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.ARENA_COUNT_ENTRY)
+        run_with_friendship_flag: bool = self.ui_listener.get_checkbox_bool(CheckBoxEnum.ARENA_WITH_FRIENDSHIP)
         self.select_arena()
-        if with_extra:
-            battle_count += 5
-            print(battle_count)
+        if run_with_friendship_flag:
+            total_iteration += 5
             self.buy_extra_flag()
-        for _ in range(battle_count):
+        self.ui_listener.add_label_to_log_frame(text=f"--------Starting {total_iteration} npc challenge--------")
+        for current_iteration in range(total_iteration):
+            if self.thread_shutdown.is_set():
+                self.ui_listener.add_label_to_log_frame(text="####### Process Stopped #######")
+                self.ui_listener.reset_ui_component(UIComponent.ARENA)
+                break
+            self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration+1}--------")
             self.challenge_opponent()
             time.sleep(3)
+            self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration+1} ended--------")
+        self.stop_daily_arena()
+
+    def daily_arena_with_thread(self):
+        self.thread_shutdown.clear()
+        self.thread = threading.Thread(target=self.arena_automation, daemon=True).start()
+
+    def stop_daily_arena(self):
+        self.thread_shutdown.set()
+        if self.thread.is_alive():
+            self.thread.join()
