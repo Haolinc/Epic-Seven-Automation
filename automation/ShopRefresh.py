@@ -94,10 +94,10 @@ class ShopRefresh:
 
     def start_store_fresh_iteration(self):
         total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.SHOP_REFRESH_COUNT_ENTRY)
-        current_iteration = 1
+        current_iteration = 0
         self.ui_listener.reset_log_frame()
-        while current_iteration <= total_iteration and not self.thread_shutdown.is_set():
-            self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration}--------")
+        self.ui_listener.add_label_to_log_frame(text=f"Initial Search")
+        while current_iteration < total_iteration and not self.thread_shutdown.is_set():
             self.check_bookmark_and_update_log()
             if self.thread_shutdown.is_set():
                 break
@@ -112,6 +112,7 @@ class ShopRefresh:
                 self.ui_listener.add_label_to_log_frame(text="Refresh Shop Fail, Stopping the application")
                 break
             current_iteration += 1
+            self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration}--------")
         # Check again for last refresh ONLY when thread is not exiting
         if not self.thread_shutdown.is_set():
             self.check_bookmark_and_update_log()
