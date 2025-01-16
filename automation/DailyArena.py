@@ -1,4 +1,4 @@
-import aircv as ac
+import cv2
 import PathConverter
 import time
 import threading
@@ -6,18 +6,18 @@ import threading
 from automation.Utilities import Utilities
 from ui.UIComponentEnum import *
 
-arena_icon = ac.imread(PathConverter.get_current_path("image\\arena_asset", "Arena_Icon.png"))
-arena = ac.imread(PathConverter.get_current_path("image\\arena_asset", "Arena.png"))
-NPC_challenge = ac.imread((PathConverter.get_current_path("image\\arena_asset", "NPC_Challenge.png")))
-arena_flag_icon = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Arena_flag_icon.png")))
-friendship_point = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Friendship_Point.png")))
-flag_buy_button = ac.imread((PathConverter.get_current_path("image\\arena_asset","Flag_Buy_Button.png")))
-NPC_icon = ac.imread((PathConverter.get_current_path("image\\arena_asset", "NPC_ICON.png")))
-challenge_button = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Challenge_Button.png")))
-start_button = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Start_Button.png")))
-do_not_display = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Do_Not_Display_Button.png")))
-auto_battle_button = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Auto_Battle_Button.png")))
-confirm_Button = ac.imread((PathConverter.get_current_path("image\\arena_asset", "Confirm_Button.png")))
+arena_icon = cv2.imread(PathConverter.get_current_path("image\\arena_asset", "Arena_Icon.png"))
+arena = cv2.imread(PathConverter.get_current_path("image\\arena_asset", "Arena.png"))
+NPC_challenge = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "NPC_Challenge.png")))
+arena_flag_icon = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "Arena_flag_icon.png")))
+friendship_point = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "Friendship_Point.png")))
+flag_buy_button = cv2.imread((PathConverter.get_current_path("image\\arena_asset","Flag_Buy_Button.png")))
+NPC_icon = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "NPC_ICON.png")))
+challenge_button = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "Challenge_Button.png")))
+start_button = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "Start_Button.png")))
+do_not_display = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "Do_Not_Display_Button.png")))
+auto_battle_button = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "Auto_Battle_Button.png")))
+confirm_Button = cv2.imread((PathConverter.get_current_path("image\\arena_asset", "Confirm_Button.png")))
 
 class DailyArena:
     thread_shutdown = threading.Event()
@@ -46,7 +46,7 @@ class DailyArena:
         self.utilities.wait_for_button_and_click(flag_buy_button, "find flag_buy_button")
 
     def gear_check_notification(self):
-        if self.utilities.find_image(self.utilities.get_numpy_screenshot(), do_not_display) is not None:
+        if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), do_not_display)):
             self.utilities.wait_for_button_and_click(do_not_display, "Do_Not_Display_Button")
 
     def arena_automation (self):
