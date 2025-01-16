@@ -1,12 +1,12 @@
 import time
 import adbutils
-import aircv as ac
+import cv2
 import numpy
 import random
 
 import PathConverter
 
-try_again = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "TryAgain.png"))
+try_again = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "TryAgain.png"))
 
 
 class Utilities:
@@ -14,10 +14,19 @@ class Utilities:
         self.device = adbutils.device(serial)
 
     def get_numpy_screenshot(self):
-        return numpy.array(self.device.screenshot())
+        return cv2.cvtColor(numpy.array(self.device.screenshot()), cv2.COLOR_RGB2BGR)
 
     def find_image(self, source_img, target_img, accuracy: float = 0.94) -> dict[any, any]:
-        return ac.find_template(source_img, target_img, accuracy)
+        result = cv2.matchTemplate(source_img, target_img, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, max_loc = cv2.minMaxLoc(result)
+        print(f"confidence: {max_val}")
+        if max_val >= accuracy:
+            top_left = max_loc
+            bottom_right = (top_left[0] + target_img.shape[1], top_left[1] + target_img.shape[0])
+            midpoint = int((top_left[0] + bottom_right[0])/2), int((top_left[1] + bottom_right[1])/2)
+            print({"result": midpoint, "confidence": max_val});
+            return {"result": midpoint, "confidence": max_val}
+        return {}
 
     def save_image(self, save_file_name: str = "some.png"):
         self.device.screenshot().save(save_file_name)
@@ -75,8 +84,8 @@ class Utilities:
             # Re-click on target with new screenshot
             return self.click_target(self.get_numpy_screenshot(), target_img, retry_count - 1, is_multi_click, identifier)
 
-    def better_click_target(self, previous_target_img=None, target_img=None, future_target_img=None,
-                            retry_count: int = 5, identifier: str = "default") -> bool:
+    def better_click_target(self, target_img=None, future_target_img=None, retry_count: int = 5,
+                            identifier: str = "default") -> bool:
         if retry_count < 0:
             print(f"Retry count less than 0, Error!")
             return False
@@ -94,17 +103,10 @@ class Utilities:
                     print("looking for future target img")
                     future_img_result = self.find_image(self.get_numpy_screenshot(), future_target_img)
                     print(f"future img result: {future_img_result}")
-                    if not future_img_result:
+                    if not bool(future_img_result):
                         print("future image not found, trying again")
-                        return self.better_click_target(previous_target_img, target_img, future_target_img, retry_count - 1, identifier)
+                        return self.better_click_target(target_img, future_target_img, retry_count - 1, identifier)
                 return True
-            if previous_target_img is not None:
-                print("looking for previous target img")
-                previous_target_img_pos = self.find_image(source_img, previous_target_img)
-                print(f"identifier: {identifier}, previous img value: {str(previous_target_img_pos)}")
-                result = previous_target_img_pos.get("result")
-                self.device.click(result[0], result[1])
-                return self.better_click_target(previous_target_img, target_img, future_target_img, retry_count - 1, identifier)
             if future_target_img is not None:
                 print("looking for future target img")
                 if self.find_image(source_img, future_target_img):
@@ -115,7 +117,7 @@ class Utilities:
             is_expedition = self.check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             # Re-click on target with new screenshot
-            return self.better_click_target(previous_target_img, target_img, future_target_img, retry_count - 1, identifier)
+            return self.better_click_target(target_img, future_target_img, retry_count - 1, identifier)
 
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()

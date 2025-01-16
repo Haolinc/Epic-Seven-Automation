@@ -1,22 +1,22 @@
 import threading
 import time
+import cv2
 
-import aircv as ac
 import PathConverter
 from automation.Utilities import Utilities
 from ui.UIComponentEnum import *
 
-covenant = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Covenant.png"))
-covenant_buy = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "CovenantBuy.png"))
-covenant_buy_confirmation = ac.imread(
+covenant = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Covenant.png"))
+covenant_buy = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "CovenantBuy.png"))
+covenant_buy_confirmation = cv2.imread(
     PathConverter.get_current_path("image\\shop_refresh_asset", "CovenantBuyConfirmation.png"))
-mystic = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Mystic.png"))
-mystic_buy = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "MysticBuy.png"))
-mystic_buy_confirmation = ac.imread(
+mystic = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Mystic.png"))
+mystic_buy = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "MysticBuy.png"))
+mystic_buy_confirmation = cv2.imread(
     PathConverter.get_current_path("image\\shop_refresh_asset", "MysticBuyConfirmation.png"))
-refresh = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Refresh.png"))
-refresh_confirm = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "RefreshConfirm.png"))
-shop_icon = ac.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Shop.png"))
+refresh = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Refresh.png"))
+refresh_confirm = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "RefreshConfirm.png"))
+shop_icon = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "Shop.png"))
 
 
 class ShopRefresh:
@@ -29,41 +29,37 @@ class ShopRefresh:
         self.ui_listener = listener
 
     def check_covenant(self) -> bool:
-        return self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
-                                         target_img=covenant) is not None
+        return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
+                                         target_img=covenant))
 
     def buy_covenant(self) -> bool:
-        if not self.utilities.better_click_target(previous_target_img=shop_icon, target_img=covenant_buy,
-                                                  future_target_img=covenant_buy_confirmation,
+        if not self.utilities.better_click_target(target_img=covenant_buy, future_target_img=covenant_buy_confirmation,
                                                   identifier="buy covenant in store page"):
             return False
-        if not self.utilities.better_click_target(previous_target_img=covenant_buy,
-                                                  target_img=covenant_buy_confirmation, future_target_img=shop_icon,
+        if not self.utilities.better_click_target(target_img=covenant_buy_confirmation, future_target_img=shop_icon,
                                                   identifier="buy covenant in confirmation page"):
             return False
         return True
 
     def check_mystic(self) -> bool:
-        return self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
-                                         target_img=mystic) is not None
+        return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
+                                         target_img=mystic))
 
     def buy_mystic(self) -> bool:
-        if not self.utilities.better_click_target(previous_target_img=shop_icon, target_img=mystic_buy,
-                                                  future_target_img=mystic_buy_confirmation,
+        if not self.utilities.better_click_target(target_img=mystic_buy, future_target_img=mystic_buy_confirmation,
                                                   identifier="buy mystic in store page"):
             return False
-        if not self.utilities.better_click_target(previous_target_img=mystic_buy, target_img=mystic_buy_confirmation,
+        if not self.utilities.better_click_target(target_img=mystic_buy_confirmation,
                                                   future_target_img=shop_icon,
                                                   identifier="buy mystic in confirmation page"):
             return False
         return True
 
     def refresh_shop(self) -> bool:
-        if not self.utilities.better_click_target(previous_target_img=shop_icon, target_img=refresh,
-                                                  future_target_img=refresh_confirm,
+        if not self.utilities.better_click_target(target_img=refresh, future_target_img=refresh_confirm,
                                                   identifier="refresh in store page"):
             return False
-        if not self.utilities.better_click_target(previous_target_img=refresh, target_img=refresh_confirm,
+        if not self.utilities.better_click_target(target_img=refresh_confirm,
                                                   future_target_img=shop_icon,
                                                   identifier="refresh in confirmation page"):
             return False
