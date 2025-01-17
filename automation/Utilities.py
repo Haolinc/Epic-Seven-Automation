@@ -84,7 +84,7 @@ class Utilities:
             # Re-click on target with new screenshot
             return self.click_target(self.get_numpy_screenshot(), target_img, retry_count - 1, is_multi_click, identifier)
 
-    def better_click_target(self, target_img=None, future_target_img=None, retry_count: int = 5,
+    def better_click_target(self, target_img=None, future_target_img=None, retry_count: int = 3,
                             identifier: str = "default") -> bool:
         if retry_count < 0:
             print(f"Retry count less than 0, Error!")
@@ -92,7 +92,7 @@ class Utilities:
         try:
             source_img = self.get_numpy_screenshot()
             target_img_pos = self.find_image(source_img, target_img)
-            if target_img_pos:
+            if bool(target_img_pos):
                 print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
                 result = target_img_pos.get("result")
                 self.device.click(result[0], result[1])
