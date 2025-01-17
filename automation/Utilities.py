@@ -24,7 +24,6 @@ class Utilities:
             top_left = max_loc
             bottom_right = (top_left[0] + target_img.shape[1], top_left[1] + target_img.shape[0])
             midpoint = int((top_left[0] + bottom_right[0])/2), int((top_left[1] + bottom_right[1])/2)
-            print({"result": midpoint, "confidence": max_val});
             return {"result": midpoint, "confidence": max_val}
         return {}
 
@@ -108,7 +107,7 @@ class Utilities:
                         return self.better_click_target(target_img, future_target_img, retry_count - 1, identifier)
                 return True
             if future_target_img is not None:
-                print("looking for future target img")
+                print("looking for future target img 2")
                 if self.find_image(source_img, future_target_img):
                     return True
             raise ValueError("Cannot Find Image")
