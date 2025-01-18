@@ -64,7 +64,6 @@ class DeviceSelectionUI(tk.CTk):
         self.mainloop()
 
     def launch_main_window(self):
-        print("DeviceSelectionUI dying")
         self.destroy()
         MainWindow(
             utilities=Utilities(self.adb_connection_menu.get())).launch()

@@ -37,7 +37,6 @@ class MainWindow(tk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.create_main_widgets()
-        utilities.save_image()
 
     def create_main_widgets(self):
         # Main frame setup

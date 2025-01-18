@@ -1,0 +1,8 @@
+/shelf/
+/workspace.xml
+__pycache__/
+build/
+dist/
+.idea/
+*.iml
+get-pip.py
