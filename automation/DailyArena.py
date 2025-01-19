@@ -68,11 +68,12 @@ class DailyArena:
             self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration+1} ended--------")
         self.stop_daily_arena()
 
-    def daily_arena_with_thread(self):
-        self.thread_shutdown.clear()
-        self.thread = threading.Thread(target=self.arena_automation, daemon=True).start()
-
-    def stop_daily_arena(self):
-        self.thread_shutdown.set()
-        if self.thread.is_alive():
-            self.thread.join()
+    # def daily_arena_with_thread(self):
+    #     self.thread_shutdown.clear()
+    #     self.thread = threading.Thread(target=self.arena_automation, daemon=True).start()
+    #
+    # def stop_daily_arena(self):
+    #     self.thread_shutdown.set()
+    #     if self.thread.is_alive():
+    #         self.ui_listener.add_label_to_log_frame(text=f"thread join")
+    #         self.thread.join()
