@@ -1,31 +1,61 @@
+import random
 import time
+from typing import Tuple
+
 import adbutils
 import cv2
 import numpy
-import random
+from numpy import ndarray
 
 import PathConverter
-
-try_again = cv2.imread(PathConverter.get_current_path("image\\shop_refresh_asset", "TryAgain.png"))
 
 
 class Utilities:
     def __init__(self, serial: str):
         self.device = adbutils.device(serial)
+        print(self.device.shell('wm size'))
+        screen_size = self.device.shell('wm size').split(": ")[-1]
+        print(screen_size)
+        self.screen_width, self.screen_height = map(int, screen_size.split("x"))
+        self.is_wide_screen = self.screen_width/self.screen_height > 2
+        print(f"Screen Size: {self.screen_width, self.screen_height}")
+        print(f"Ratio: {self.screen_width/self.screen_height}")
+        self.try_again = self.process_image_from_disk(PathConverter.get_current_path("image\\shop_refresh_asset", "TryAgain.png"))
 
     def get_numpy_screenshot(self):
-        return cv2.cvtColor(numpy.array(self.device.screenshot()), cv2.COLOR_RGB2BGR)
+        blur_screenshot = cv2.GaussianBlur(numpy.array(self.device.screenshot()), (5, 5), 0)
+        blur_hsv_screenshot = cv2.cvtColor(blur_screenshot, cv2.COLOR_BGR2HSV)
+        return blur_hsv_screenshot
 
-    def find_image(self, source_img, target_img, accuracy: float = 0.94) -> dict[any, any]:
+    def find_image(self, source_img, target_img, confidence: float = 0.80) -> dict[any, any]:
         result = cv2.matchTemplate(source_img, target_img, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
         print(f"confidence: {max_val}")
-        if max_val >= accuracy:
+        if max_val >= confidence:
             top_left = max_loc
             bottom_right = (top_left[0] + target_img.shape[1], top_left[1] + target_img.shape[0])
             midpoint = int((top_left[0] + bottom_right[0])/2), int((top_left[1] + bottom_right[1])/2)
             return {"result": midpoint, "confidence": max_val}
         return {}
+
+    def get_relative_coord_for_umat_resize(self, coord: Tuple[int, int]) -> Tuple[int, int]:
+        """
+        :param coord: width, height
+        :return: width, height
+        """
+
+        if self.is_wide_screen:
+            return int(coord[0] / 1920 * (self.screen_width * 0.8)), int(coord[1] / 1080 * self.screen_height)
+        else:
+            return int(coord[0] / 1920 * self.screen_width), int(coord[1] / 1080 * self.screen_height)
+
+    def process_image_from_disk(self, path: str) -> cv2.UMat | ndarray:
+        image_umat = cv2.imread(path)
+        blur_umat = cv2.GaussianBlur(image_umat, (5, 5), 0)
+        blur_hsv_umat = cv2.cvtColor(blur_umat, cv2.COLOR_RGB2HSV)
+        height, width = blur_hsv_umat.shape[:2]
+        return cv2.resize(blur_hsv_umat, self.get_relative_coord_for_umat_resize((width, height)),
+                          interpolation=cv2.INTER_LINEAR_EXACT)
 
     def save_image(self, save_file_name: str = "some.png"):
         self.device.screenshot().save(save_file_name)
@@ -120,8 +150,8 @@ class Utilities:
 
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()
-        if self.find_image(source_img=current_screenshot, target_img=try_again):
-            self.better_click_target(target_img=try_again, identifier="refresh expedition")
+        if self.find_image(source_img=current_screenshot, target_img=self.try_again):
+            self.better_click_target(target_img=self.try_again, identifier="refresh expedition")
             time.sleep(2)  # Wait for a bit to check if there are some other expedition coming in
             self.swipe_down()  # Need to click at least once if another expedition popping up
             return True
