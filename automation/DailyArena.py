@@ -2,6 +2,7 @@ import threading
 import time
 
 import PathConverter
+from automation.DailyArenaThread import DailyArenaThread
 from automation.Utilities import Utilities
 from ui.UIComponentEnum import *
 
@@ -12,6 +13,7 @@ class DailyArena:
     def __init__(self, utilities: Utilities, listener):
         self.utilities = utilities
         self.ui_listener = listener
+        self.arena_thread = None
         self.arena_icon = utilities.process_image_from_disk(PathConverter.get_current_path("image\\arena_asset", "Arena_Icon.png"))
         self.arena = utilities.process_image_from_disk(PathConverter.get_current_path("image\\arena_asset", "Arena.png"))
         self.NPC_challenge = utilities.process_image_from_disk((PathConverter.get_current_path("image\\arena_asset", "NPC_Challenge.png")))
@@ -49,7 +51,7 @@ class DailyArena:
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.do_not_display)):
             self.utilities.wait_for_button_and_click(self.do_not_display, "Do_Not_Display_Button")
 
-    def arena_automation (self):
+    def arena_automation (self, shutdown_event):
         total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.ARENA_COUNT_ENTRY)
         run_with_friendship_flag: bool = self.ui_listener.get_checkbox_bool(CheckBoxEnum.ARENA_WITH_FRIENDSHIP)
         self.select_arena()
@@ -58,22 +60,24 @@ class DailyArena:
             self.buy_extra_flag()
         self.ui_listener.add_label_to_log_frame(text=f"--------Starting {total_iteration} npc challenge--------")
         for current_iteration in range(total_iteration):
-            if self.thread_shutdown.is_set():
+            if shutdown_event.is_set():
                 self.ui_listener.add_label_to_log_frame(text="####### Process Stopped #######")
-                self.ui_listener.reset_ui_component(UIComponent.ARENA)
                 break
             self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration+1}--------")
             self.challenge_opponent()
             time.sleep(3)
             self.ui_listener.add_label_to_log_frame(text=f"--------Iteration: {current_iteration+1} ended--------")
-        self.stop_daily_arena()
 
-    # def daily_arena_with_thread(self):
-    #     self.thread_shutdown.clear()
-    #     self.thread = threading.Thread(target=self.arena_automation, daemon=True).start()
-    #
-    # def stop_daily_arena(self):
-    #     self.thread_shutdown.set()
-    #     if self.thread.is_alive():
-    #         self.ui_listener.add_label_to_log_frame(text=f"thread join")
-    #         self.thread.join()
+    def start_daily_arena(self):
+        if self.arena_thread is not None and self.arena_thread.is_alive():
+            self.ui_listener.add_label_to_log_frame(text="####### Arena Thread Already Running #######")
+            return
+
+        self.arena_thread = DailyArenaThread(self, self.ui_listener)
+        self.arena_thread.start()
+
+    def stop_daily_arena(self):
+        if self.arena_thread is not None:
+            print(self.arena_thread.is_alive())
+            self.arena_thread.stop()
+            self.ui_listener.add_label_to_log_frame(text="####### Process Terminating #######")

@@ -105,7 +105,7 @@ class MainWindow(tk.CTk):
     def run_arena_process(self):
         if self.start_arena_button.cget("text") == "Start Arena":
             self.start_arena_button.configure(text="Stop Arena Automation")
-            self.daily_arena.daily_arena_with_thread()
+            self.daily_arena.start_daily_arena()
         else:
             self.start_arena_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait for this iteration to end #######")

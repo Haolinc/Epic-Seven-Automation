@@ -1,5 +1,4 @@
 import threading
-import time
 
 from ui.UIComponentEnum import *
 
@@ -13,7 +12,7 @@ class DailyArenaThread(threading.Thread):
     def run(self):
         self.ui_listener.add_label_to_log_frame(text=f"####### Daily Arena Thread Started #######")
         try:
-            self.daily_arena_instance.run_arena_automation(self.shutdown_event)
+            self.daily_arena_instance.arena_automation(self.shutdown_event)
         except Exception as e:
             self.ui_listener.add_label_to_log_frame(text=f"Error:{str(e)}")
         finally:
