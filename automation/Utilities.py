@@ -27,7 +27,7 @@ class Utilities:
         blur_hsv_screenshot = cv2.cvtColor(blur_screenshot, cv2.COLOR_BGR2HSV)
         return blur_hsv_screenshot
 
-    def find_image(self, source_img, target_img, confidence: float = 0.80) -> dict[any, any]:
+    def find_image(self, source_img, target_img, confidence: float = 0.82) -> dict[any, any]:
         result = cv2.matchTemplate(source_img, target_img, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
         print(f"confidence: {max_val}")
@@ -38,7 +38,7 @@ class Utilities:
             return {"result": midpoint, "confidence": max_val}
         return {}
 
-    def get_relative_coord_for_umat_resize(self, coord: Tuple[int, int]) -> Tuple[int, int]:
+    def get_relative_coord(self, coord: Tuple[int, int]) -> Tuple[int, int]:
         """
         :param coord: width, height
         :return: width, height
@@ -54,8 +54,7 @@ class Utilities:
         blur_umat = cv2.GaussianBlur(image_umat, (5, 5), 0)
         blur_hsv_umat = cv2.cvtColor(blur_umat, cv2.COLOR_RGB2HSV)
         height, width = blur_hsv_umat.shape[:2]
-        return cv2.resize(blur_hsv_umat, self.get_relative_coord_for_umat_resize((width, height)),
-                          interpolation=cv2.INTER_LINEAR_EXACT)
+        return cv2.resize(blur_hsv_umat, self.get_relative_coord((width, height)), interpolation=cv2.INTER_LINEAR_EXACT)
 
     def save_image(self, save_file_name: str = "some.png"):
         self.device.screenshot().save(save_file_name)
@@ -112,6 +111,39 @@ class Utilities:
             print(f"Found expedition? {is_expedition}")
             # Re-click on target with new screenshot
             return self.click_target(self.get_numpy_screenshot(), target_img, retry_count - 1, is_multi_click, identifier)
+
+    def click_by_position(self, target_img=None, future_target_img=None, position_offset=(0, 0), retry_count: int = 3,
+                          identifier: str = "default") -> bool:
+        if retry_count < 0:
+            print(f"Retry count less than 0, Error!")
+            return False
+        try:
+            source_img = self.get_numpy_screenshot()
+            target_img_pos = self.find_image(source_img, target_img)
+
+            if bool(target_img_pos):
+                print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
+                result = target_img_pos.get("result")
+                relative_position_offset = self.get_relative_coord(position_offset)
+                click_position = (result[0] + relative_position_offset[0], result[1] + relative_position_offset[1])
+                self.device.click(click_position[0], click_position[1])
+                # Check if it actually clicked if future_target_img is provided
+                if future_target_img is not None:
+                    # Wait for animation
+                    time.sleep(0.5)
+                    print("looking for future target img")
+                    future_img_result = self.find_image(self.get_numpy_screenshot(), future_target_img)
+                    print(f"future img result: {future_img_result}")
+                    if not bool(future_img_result):
+                        print("future image not found, trying again")
+                        return self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
+                return True
+        except Exception as e:
+            print(f"Unable to find image, Exception: {e}, identifier: {identifier}")
+            is_expedition = self.check_and_refresh_expedition()
+            print(f"Found expedition? {is_expedition}")
+            # Re-click on target with new screenshot
+            return self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
 
     def better_click_target(self, target_img=None, future_target_img=None, retry_count: int = 3,
                             identifier: str = "default") -> bool:
