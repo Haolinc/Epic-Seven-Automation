@@ -1,4 +1,7 @@
+import multiprocessing
+import queue
 import threading
+import time
 import customtkinter as tk
 from automation.DailyArena import DailyArena
 from automation.ShopRefresh import ShopRefresh
@@ -27,16 +30,36 @@ class MainWindow(tk.CTk):
         self.mystic_count_label = None
         self.covenant_count_label = None
         self.shop_refresh = ShopRefresh(utilities, Listener(self))
-        self.daily_arena = DailyArena(utilities, Listener(self))
+        self.daily_arena = DailyArena(utilities)
 
         # Set window size and title
         self.title("E7 Secret Shop Auto")
         self.geometry("500x630")
         self.resizable(False,False)
-
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.create_main_widgets()
+
+        # log frame thread setup
+        self.ui_listener = Listener(self)
+        self.log_queue = multiprocessing.Queue()
+        self.thread = None
+        self.thread_shutdown_event = threading.Event()
+        self.subprocess = None
+
+    def fetch_logs(self):
+        while not self.thread_shutdown_event.is_set():
+            try:
+                message = self.log_queue.get(timeout=0.2)
+
+                if message == "RESET_UI":
+                    self.ui_listener.reset_ui_component(UIComponent.ARENA)
+                    self.log_queue.empty()
+                    UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopped Due to Exception #######")
+                self.ui_listener.add_label_to_log_frame(f"-------- {message} --------")
+            except queue.Empty:
+                pass
+            time.sleep(0.1)
 
     def create_main_widgets(self):
         # Main frame setup
@@ -103,13 +126,36 @@ class MainWindow(tk.CTk):
             self.shop_refresh.stop_shop_refresh()
 
     def run_arena_process(self):
+        total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.ARENA_COUNT_ENTRY)
+        run_with_friendship_flag: bool = self.ui_listener.get_checkbox_bool(CheckBoxEnum.ARENA_WITH_FRIENDSHIP)
+
+        # when 'start button is pressed'
         if self.start_arena_button.cget("text") == "Start Arena":
             self.start_arena_button.configure(text="Stop Arena Automation")
-            self.daily_arena.daily_arena_with_thread()
+            # start arena subprocess
+            self.subprocess = multiprocessing.Process(target=self.daily_arena.run_arena_automation_subprocess, args=(self.log_queue, total_iteration, run_with_friendship_flag))
+            self.subprocess.start()
+            self.log_queue.put("Daily Arena Process Started")
+
+            # start log fetching thread
+            if not self.thread or not self.thread.is_alive():
+                self.thread_shutdown_event.clear()
+                self.thread = threading.Thread(target=self.fetch_logs, daemon=True)
+                self.thread.start()
         else:
+            # when 'stop button is pressed'
             self.start_arena_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait for this iteration to end #######")
-            self.daily_arena.stop_daily_arena()
+
+            # terminate daily arena subprocess
+            if self.subprocess and self.subprocess.is_alive():
+                self.subprocess.terminate()
+                self.subprocess.join()
+                self.log_queue.put("Daily Arena Process Terminating")
+
+            # stop log fetch thread
+            self.thread_shutdown_event.set()
+            self.ui_listener.reset_ui_component(UIComponent.ARENA)
 
     # Use for unlocking the button from disabled state
     # REMOVE THIS FUNCTION AFTER ARENA THREAD REFACTOR !!!!!!!!!!
@@ -127,7 +173,6 @@ class MainWindow(tk.CTk):
 
     def launch(self):
         self.mainloop()
-
 
 class Listener:
     def __init__(self, parent: MainWindow):
