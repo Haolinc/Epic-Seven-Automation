@@ -6,7 +6,7 @@ This project utilizes ADB (Android Debug Bridge) tools to connect the emulators 
 ![Shop Refresh Demo](https://github.com/user-attachments/assets/a9f84448-8fa2-4701-a5bd-232e0a2a566e)
 
 ## Daily Arena Demo
-
+To be added
 
 # Getting Started
 ## Prerequisites
