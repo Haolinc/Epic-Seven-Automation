@@ -25,3 +25,15 @@ class CheckBoxEnum(Enum):
 class UIComponent(Enum):
     SHOP_REFRESH = auto()
     ARENA = auto()
+    ALL = auto()
+
+
+class UIThreadMessage(Enum):
+    ADD_TO_LOG_FRAME = auto()
+    START_SHOP_REFRESH = auto()
+    START_DAILY_ARENA = auto()
+    STOP = auto()
+    COVENANT_FOUND = auto()
+    MYSTIC_FOUND = auto()
+    RESET_LOG = auto()
+    ERROR = auto()

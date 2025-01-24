@@ -7,6 +7,7 @@ from automation.DailyArena import DailyArena
 from automation.ShopRefresh import ShopRefresh
 from automation.Utilities import Utilities
 import ui.UIHelper as UIHelper
+from ui.ProcessManager import ProcessManager
 from ui.UIComponentEnum import *
 
 tk.set_appearance_mode("System")
@@ -29,7 +30,9 @@ class MainWindow(tk.CTk):
         self.top_label = None
         self.mystic_count_label = None
         self.covenant_count_label = None
-        self.shop_refresh = ShopRefresh(utilities, Listener(self))
+        self.log_queue = multiprocessing.Queue()
+        self.shop_refresh = ShopRefresh(utilities, self.log_queue)
+        self.shop_refresh_process = None
         self.daily_arena = DailyArena(utilities)
 
         # Set window size and title
@@ -42,7 +45,6 @@ class MainWindow(tk.CTk):
 
         # log frame thread setup
         self.ui_listener = Listener(self)
-        self.log_queue = multiprocessing.Queue()
         self.thread = None
         self.thread_shutdown_event = threading.Event()
         self.subprocess = None
@@ -118,12 +120,15 @@ class MainWindow(tk.CTk):
     # Function to change button state and run or terminate process in thread
     def run_shop_refresh_process(self):
         if self.start_shop_refresh_button.cget("text") == "Start Shop Refresh":
-            self.start_shop_refresh_button.configure(text="Stop Shop Refresh")
-            self.shop_refresh.start_shop_refresh_with_thread()
+            self.shop_refresh_process = ProcessManager(function=self.shop_refresh.start_store_fresh_iteration,
+                                                       args=(int(self.refresh_shop_count_entry.get()),),
+                                                       ui_listener=self.ui_listener,
+                                                       msg_queue=self.log_queue)
+            self.shop_refresh_process.start_process()
         else:
             self.start_shop_refresh_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
-            self.shop_refresh.stop_shop_refresh()
+            self.shop_refresh_process.stop_process()
 
     def run_arena_process(self):
         total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.ARENA_COUNT_ENTRY)
@@ -187,10 +192,16 @@ class Listener:
     def set_label_text(self, label_enum: LabelEnum, text: str):
         self.parent.__getattribute__(label_enum.value).configure(text=text)
 
+    def get_label_text(self, label_enum: LabelEnum) -> str:
+        return str(self.parent.__getattribute__(label_enum.value).cget("text"))
+
     def set_button_text(self, button_enum: ButtonEnum, text: str):
         self.parent.__getattribute__(button_enum.value).configure(text=text)
 
-    def reset_ui_component(self, ui_component: UIComponent):
+    def set_button_state(self, button_enum: ButtonEnum, state: str):
+        self.parent.__getattribute__(button_enum.value).configure(state=state)
+
+    def reset_ui_component(self, ui_component: UIComponent = UIComponent.ALL):
         match ui_component:
             case UIComponent.SHOP_REFRESH:
                 self.parent.start_shop_refresh_button.configure(state="normal")
@@ -198,8 +209,11 @@ class Listener:
             case UIComponent.ARENA:
                 self.parent.start_arena_button.configure(state="normal")
                 self.parent.start_arena_button.configure(text="Start Arena")
-            case _:
-                print("No Valid UIComponent Found")
+            case UIComponent.ALL:
+                self.parent.start_shop_refresh_button.configure(state="normal")
+                self.parent.start_shop_refresh_button.configure(text="Start Shop Refresh")
+                self.parent.start_arena_button.configure(state="normal")
+                self.parent.start_arena_button.configure(text="Start Arena")
 
     def get_entry_count(self, entry_enum: EntryEnum) -> int:
         return int(self.parent.__getattribute__(entry_enum.value).get())
