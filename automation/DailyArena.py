@@ -2,13 +2,16 @@ import time
 import PathConverter
 
 from automation.Utilities import Utilities
+from ui.UIComponentEnum import UIThreadMessage
+from ui.UIMessage import UIMessage
 
 
 class DailyArena:
 
-    def __init__(self, utilities: Utilities):
+    def __init__(self, utilities: Utilities, msg_queue):
         self.utilities = utilities
         self.arena_process = None
+        self.msg_queue = msg_queue
         self.arena_icon = utilities.process_image_from_disk(PathConverter.get_current_path("image\\arena_asset", "Arena_Icon.png"))
         self.arena = utilities.process_image_from_disk(PathConverter.get_current_path("image\\arena_asset", "Arena.png"))
         self.NPC_challenge = utilities.process_image_from_disk((PathConverter.get_current_path("image\\arena_asset", "NPC_Challenge.png")))
@@ -24,9 +27,10 @@ class DailyArena:
         self.quick_start_button = utilities.process_image_from_disk((PathConverter.get_current_path("image\\arena_asset", "Quick_Start_Button.png")))
         self.quick_confirm_button = utilities.process_image_from_disk((PathConverter.get_current_path("image\\arena_asset", "Quick_Confirm_Button.png")))
 
-    def select_arena(self, log_queue):
+    def select_arena(self):
         if not self.utilities.wait_for_button_and_click_bool(self.NPC_challenge, "find npc challenge"):
-            log_queue.put("failed to find npc challenge, iteration stop")
+            self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME,
+                                         "failed to find npc challenge, iteration stop"))
 
     def challenge_opponent(self):
         self.utilities.wait_for_button_and_click(self.NPC_icon, "find NPC_icon")
@@ -51,19 +55,22 @@ class DailyArena:
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.do_not_display)):
             self.utilities.wait_for_button_and_click(self.do_not_display, "Do_Not_Display_Button")
 
-    def run_arena_automation_subprocess (self, log_queue, total_iteration, run_with_friendship_flag):
+    def run_arena_automation_subprocess(self, total_iteration, run_with_friendship_flag):
         try:
-            self.select_arena(log_queue)
+            self.msg_queue.put(UIMessage(UIThreadMessage.START_DAILY_ARENA))
+            self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, "Daily Arena Process Started"))
+            self.select_arena()
             if run_with_friendship_flag:
                 total_iteration += 5
                 self.buy_extra_flag()
-            log_queue.put(f"Starting {total_iteration} npc challenge")
+            self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Starting {total_iteration} npc challenge"))
             for current_iteration in range(total_iteration):
-                log_queue.put(f"Iteration: {current_iteration+1}")
+                self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Iteration: {current_iteration+1}"))
                 self.challenge_opponent()
                 time.sleep(3)
-                log_queue.put(f"Iteration: {current_iteration+1} ended")
-            log_queue.put("Arena automation completed!")
+                self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Iteration: {current_iteration+1} ended"))
+            self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, "Arena automation completed!"))
+            self.msg_queue.put(UIMessage(UIThreadMessage.STOP))
         except Exception as e:
-            log_queue.put(f"Error: {str(e)}")
-            log_queue.put("RESET_UI")
+            self.msg_queue.put(UIMessage(UIThreadMessage.ERROR, str(e)))
+            self.msg_queue.put(UIMessage(UIThreadMessage.STOP))

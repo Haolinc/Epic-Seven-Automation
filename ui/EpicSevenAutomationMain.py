@@ -30,15 +30,16 @@ class MainWindow(tk.CTk):
         self.top_label = None
         self.mystic_count_label = None
         self.covenant_count_label = None
-        self.log_queue = multiprocessing.Queue()
-        self.shop_refresh = ShopRefresh(utilities, self.log_queue)
+        self.msg_queue = multiprocessing.Queue()
+        self.shop_refresh = ShopRefresh(utilities, self.msg_queue)
         self.shop_refresh_process = None
-        self.daily_arena = DailyArena(utilities)
+        self.daily_arena = DailyArena(utilities, self.msg_queue)
+        self.daily_arena_process = None
 
         # Set window size and title
         self.title("E7 Secret Shop Auto")
         self.geometry("500x630")
-        self.resizable(False,False)
+        self.resizable(False, False)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.create_main_widgets()
@@ -52,12 +53,13 @@ class MainWindow(tk.CTk):
     def fetch_logs(self):
         while not self.thread_shutdown_event.is_set():
             try:
-                message = self.log_queue.get(timeout=0.2)
+                message = self.msg_queue.get(timeout=0.2)
 
                 if message == "RESET_UI":
                     self.ui_listener.reset_ui_component(UIComponent.ARENA)
-                    self.log_queue.empty()
-                    UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopped Due to Exception #######")
+                    self.msg_queue.empty()
+                    UIHelper.add_label_to_frame(frame=self.log_frame,
+                                                text="####### Process Stopped Due to Exception #######")
                 self.ui_listener.add_label_to_log_frame(f"-------- {message} --------")
             except queue.Empty:
                 pass
@@ -123,7 +125,7 @@ class MainWindow(tk.CTk):
             self.shop_refresh_process = ProcessManager(function=self.shop_refresh.start_store_fresh_iteration,
                                                        args=(int(self.refresh_shop_count_entry.get()),),
                                                        ui_listener=self.ui_listener,
-                                                       msg_queue=self.log_queue)
+                                                       msg_queue=self.msg_queue)
             self.shop_refresh_process.start_process()
         else:
             self.start_shop_refresh_button.configure(state="disabled")
@@ -137,30 +139,17 @@ class MainWindow(tk.CTk):
         # when 'start button is pressed'
         if self.start_arena_button.cget("text") == "Start Arena":
             self.start_arena_button.configure(text="Stop Arena Automation")
-            # start arena subprocess
-            self.subprocess = multiprocessing.Process(target=self.daily_arena.run_arena_automation_subprocess, args=(self.log_queue, total_iteration, run_with_friendship_flag))
-            self.subprocess.start()
-            self.log_queue.put("Daily Arena Process Started")
-
-            # start log fetching thread
-            if not self.thread or not self.thread.is_alive():
-                self.thread_shutdown_event.clear()
-                self.thread = threading.Thread(target=self.fetch_logs, daemon=True)
-                self.thread.start()
+            self.daily_arena_process = ProcessManager(function=self.daily_arena.run_arena_automation_subprocess,
+                                                      args=(total_iteration, run_with_friendship_flag),
+                                                      ui_listener=self.ui_listener,
+                                                      msg_queue=self.msg_queue)
+            self.daily_arena_process.start_process()
         else:
             # when 'stop button is pressed'
             self.start_arena_button.configure(state="disabled")
-            UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait for this iteration to end #######")
-
-            # terminate daily arena subprocess
-            if self.subprocess and self.subprocess.is_alive():
-                self.subprocess.terminate()
-                self.subprocess.join()
-                self.log_queue.put("Daily Arena Process Terminating")
-
-            # stop log fetch thread
-            self.thread_shutdown_event.set()
-            self.ui_listener.reset_ui_component(UIComponent.ARENA)
+            UIHelper.add_label_to_frame(frame=self.log_frame,
+                                        text="####### Process Stopping, Please Wait for this iteration to end #######")
+            self.daily_arena_process.stop_process()
 
     # Use for unlocking the button from disabled state
     # REMOVE THIS FUNCTION AFTER ARENA THREAD REFACTOR !!!!!!!!!!
@@ -178,6 +167,7 @@ class MainWindow(tk.CTk):
 
     def launch(self):
         self.mainloop()
+
 
 class Listener:
     def __init__(self, parent: MainWindow):
