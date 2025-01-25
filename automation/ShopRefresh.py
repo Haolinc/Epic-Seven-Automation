@@ -1,15 +1,12 @@
-import threading
 import time
-from multiprocessing import Queue
-
 import PathConverter
 from automation.Utilities import Utilities
-from ui.UIComponentEnum import *
+from ui.UIComponentEnum import UIThreadMessage
 from ui.UIMessage import UIMessage
 
 
 class ShopRefresh:
-    def __init__(self, utilities: Utilities, msg_queue: Queue):
+    def __init__(self, utilities: Utilities, msg_queue):
         self.utilities = utilities
         self.msg_queue = msg_queue
         self.covenant = utilities.process_image_from_disk(

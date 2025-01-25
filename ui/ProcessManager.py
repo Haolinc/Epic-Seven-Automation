@@ -1,6 +1,4 @@
 import multiprocessing
-import time
-
 from ui.UIThreadHandler import ThreadHandler
 
 

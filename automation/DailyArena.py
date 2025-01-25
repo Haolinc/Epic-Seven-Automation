@@ -1,6 +1,5 @@
 import time
 import PathConverter
-
 from automation.Utilities import Utilities
 from ui.UIComponentEnum import UIThreadMessage
 from ui.UIMessage import UIMessage
