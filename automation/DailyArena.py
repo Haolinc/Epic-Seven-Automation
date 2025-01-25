@@ -71,4 +71,3 @@ class DailyArena:
             self.msg_queue.put(UIMessage(UIThreadMessage.STOP))
         except Exception as e:
             self.msg_queue.put(UIMessage(UIThreadMessage.ERROR, str(e)))
-            self.msg_queue.put(UIMessage(UIThreadMessage.STOP))

@@ -56,6 +56,7 @@ class ThreadHandler:
 
                     case MsgEnum.ERROR:
                         self.ui_listener.add_label_to_log_frame(text=f"Error: {message.text}")
+                        self.end_checking_ui_event.set()
 
                     case MsgEnum.STOP:
                         self.end_checking_ui_event.set()
