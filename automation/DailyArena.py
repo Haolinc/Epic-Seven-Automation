@@ -10,7 +10,6 @@ class DailyArena:
 
     def __init__(self, utilities: Utilities, msg_queue):
         self.utilities = utilities
-        self.arena_process = None
         self.msg_queue = msg_queue
         self.arena_icon = utilities.process_image_from_disk(PathConverter.get_current_path("image\\arena_asset", "Arena_Icon.png"))
         self.arena = utilities.process_image_from_disk(PathConverter.get_current_path("image\\arena_asset", "Arena.png"))

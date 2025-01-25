@@ -1,12 +1,11 @@
 import multiprocessing
-import queue
-import threading
-import time
+
 import customtkinter as tk
+
+import ui.UIHelper as UIHelper
 from automation.DailyArena import DailyArena
 from automation.ShopRefresh import ShopRefresh
 from automation.Utilities import Utilities
-import ui.UIHelper as UIHelper
 from ui.ProcessManager import ProcessManager
 from ui.UIComponentEnum import *
 
@@ -14,12 +13,6 @@ tk.set_appearance_mode("System")
 
 
 class MainWindow(tk.CTk):
-    thread: threading.Thread()
-    thread_shutdown = threading.Event()
-    shop_refresh: ShopRefresh = None
-    utilities: Utilities = None
-    daily_arena: DailyArena = None
-
     def __init__(self, utilities: Utilities):
         super().__init__()
         self.log_frame = None
@@ -43,27 +36,7 @@ class MainWindow(tk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.create_main_widgets()
-
-        # log frame thread setup
         self.ui_listener = Listener(self)
-        self.thread = None
-        self.thread_shutdown_event = threading.Event()
-        self.subprocess = None
-
-    def fetch_logs(self):
-        while not self.thread_shutdown_event.is_set():
-            try:
-                message = self.msg_queue.get(timeout=0.2)
-
-                if message == "RESET_UI":
-                    self.ui_listener.reset_ui_component(UIComponent.ARENA)
-                    self.msg_queue.empty()
-                    UIHelper.add_label_to_frame(frame=self.log_frame,
-                                                text="####### Process Stopped Due to Exception #######")
-                self.ui_listener.add_label_to_log_frame(f"-------- {message} --------")
-            except queue.Empty:
-                pass
-            time.sleep(0.1)
 
     def create_main_widgets(self):
         # Main frame setup
@@ -148,22 +121,8 @@ class MainWindow(tk.CTk):
             # when 'stop button is pressed'
             self.start_arena_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame,
-                                        text="####### Process Stopping, Please Wait for this iteration to end #######")
+                                        text="####### Process Stopping, Please Wait #######")
             self.daily_arena_process.stop_process()
-
-    # Use for unlocking the button from disabled state
-    # REMOVE THIS FUNCTION AFTER ARENA THREAD REFACTOR !!!!!!!!!!
-    def check_shutdown_flag_in_thread(self):
-        if self.thread.is_alive():
-            self.after(100, self.check_shutdown_flag_in_thread)
-        else:
-            self.reset_widgets()
-
-    # REMOVE THIS FUNCTION AFTER ARENA THREAD REFACTOR !!!!!!!!!!
-    def reset_widgets(self):
-        self.start_shop_refresh_button.configure(state="normal")
-        self.start_shop_refresh_button.configure(text="Start")
-        self.top_label.configure(text="Please enter the total iterations you want to run")
 
     def launch(self):
         self.mainloop()
@@ -191,19 +150,11 @@ class Listener:
     def set_button_state(self, button_enum: ButtonEnum, state: str):
         self.parent.__getattribute__(button_enum.value).configure(state=state)
 
-    def reset_ui_component(self, ui_component: UIComponent = UIComponent.ALL):
-        match ui_component:
-            case UIComponent.SHOP_REFRESH:
-                self.parent.start_shop_refresh_button.configure(state="normal")
-                self.parent.start_shop_refresh_button.configure(text="Start Shop Refresh")
-            case UIComponent.ARENA:
-                self.parent.start_arena_button.configure(state="normal")
-                self.parent.start_arena_button.configure(text="Start Arena")
-            case UIComponent.ALL:
-                self.parent.start_shop_refresh_button.configure(state="normal")
-                self.parent.start_shop_refresh_button.configure(text="Start Shop Refresh")
-                self.parent.start_arena_button.configure(state="normal")
-                self.parent.start_arena_button.configure(text="Start Arena")
+    def reset_ui_component(self):
+        self.parent.start_shop_refresh_button.configure(state="normal")
+        self.parent.start_shop_refresh_button.configure(text="Start Shop Refresh")
+        self.parent.start_arena_button.configure(state="normal")
+        self.parent.start_arena_button.configure(text="Start Arena")
 
     def get_entry_count(self, entry_enum: EntryEnum) -> int:
         return int(self.parent.__getattribute__(entry_enum.value).get())

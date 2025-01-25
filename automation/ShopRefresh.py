@@ -9,8 +9,6 @@ from ui.UIMessage import UIMessage
 
 
 class ShopRefresh:
-    thread_shutdown = threading.Event()
-
     def __init__(self, utilities: Utilities, msg_queue: Queue):
         self.utilities = utilities
         self.msg_queue = msg_queue
@@ -87,11 +85,10 @@ class ShopRefresh:
                 self.msg_queue.put(UIMessage(UIThreadMessage.ERROR, "Mystic Purchase Fail, Stopping the application"))
 
     def start_store_fresh_iteration(self, total_iteration: int):
-        total_iteration: int = total_iteration
         current_iteration = 0
         self.msg_queue.put(UIMessage(UIThreadMessage.START_SHOP_REFRESH))
         self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, "Initial Search"))
-        while current_iteration < total_iteration and not self.thread_shutdown.is_set():
+        while current_iteration < total_iteration:
             self.check_bookmark_and_update_log()
             self.utilities.swipe_down()
             time.sleep(0.5)
@@ -102,7 +99,7 @@ class ShopRefresh:
                 break
             current_iteration += 1
             self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME,
-                                         f"--------Iteration: {current_iteration}--------"))
+                                         f"Iteration: {current_iteration}"))
         # Check again for last refresh
         self.check_bookmark_and_update_log()
         self.utilities.swipe_down()
