@@ -113,14 +113,10 @@ class Utilities:
             return self.click_target(self.get_numpy_screenshot(), target_img, retry_count - 1, is_multi_click, identifier)
 
     def click_by_position(self, target_img=None, future_target_img=None, position_offset=(0, 0), retry_count: int = 3,
-                          identifier: str = "default") -> bool:
-        if retry_count < 0:
-            print(f"Retry count less than 0, Error!")
-            return False
+                          identifier: str = "default"):
         try:
             source_img = self.get_numpy_screenshot()
             target_img_pos = self.find_image(source_img, target_img)
-
             if bool(target_img_pos):
                 print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
                 result = target_img_pos.get("result")
@@ -136,49 +132,60 @@ class Utilities:
                     print(f"future img result: {future_img_result}")
                     if not bool(future_img_result):
                         print("future image not found, trying again")
-                        return self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
-                return True
-        except Exception as e:
-            print(f"Unable to find image, Exception: {e}, identifier: {identifier}")
-            is_expedition = self.check_and_refresh_expedition()
-            print(f"Found expedition? {is_expedition}")
-            # Re-click on target with new screenshot
-            return self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
-
-    def better_click_target(self, target_img=None, future_target_img=None, retry_count: int = 3,
-                            identifier: str = "default") -> bool:
-        if retry_count < 0:
-            print(f"Retry count less than 0, Error!")
-            return False
-        try:
-            source_img = self.get_numpy_screenshot()
-            target_img_pos = self.find_image(source_img, target_img)
-            if bool(target_img_pos):
-                print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
-                result = target_img_pos.get("result")
-                self.device.click(result[0], result[1])
-                # Check if it actually clicked if future_target_img is provided
-                if future_target_img is not None:
-                    # Wait for animation
-                    time.sleep(0.5)
-                    print("looking for future target img")
-                    future_img_result = self.find_image(self.get_numpy_screenshot(), future_target_img)
-                    print(f"future img result: {future_img_result}")
-                    if not bool(future_img_result):
-                        print("future image not found, trying again")
-                        return self.better_click_target(target_img, future_target_img, retry_count - 1, identifier)
+                        raise ValueError(f"Future Image Not Found For: {identifier}")
                 return True
             if future_target_img is not None:
-                print("looking for future target img 2")
+                print("check if future target image present")
                 if self.find_image(source_img, future_target_img):
-                    return True
-            raise ValueError("Cannot Find Image")
+                    print("future target image presented")
+                    return
+            raise ValueError(f"Cannot Find Image: {identifier}")
         except Exception as e:
-            print(f"Unable to find image, Exception: {e}, identifier: {identifier}")
+            print(f"Exception: {e}")
+            if retry_count <= 0:
+                raise
             is_expedition = self.check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             # Re-click on target with new screenshot
-            return self.better_click_target(target_img, future_target_img, retry_count - 1, identifier)
+            self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
+
+    def better_click_target(self, target_img=None, future_target_img=None, retry_count: int = 2, timeout: float = 0.2,
+                            identifier: str = "default"):
+        try:
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                source_img = self.get_numpy_screenshot()
+                target_img_pos = self.find_image(source_img, target_img)
+                if bool(target_img_pos):
+                    print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
+                    result = target_img_pos.get("result")
+                    self.device.click(result[0], result[1])
+                    # Check if it actually clicked if future_target_img is provided
+                    if future_target_img is not None:
+                        # Wait for animation
+                        time.sleep(0.5)
+                        print("clicked, looking for future target img")
+                        future_img_result = self.find_image(self.get_numpy_screenshot(), future_target_img)
+                        print(f"future img result: {future_img_result}")
+                        if not bool(future_img_result):
+                            print("future image not found, trying again")
+                            raise ValueError(f"Future Image Not Found For: {identifier}")
+                    return
+                if future_target_img is not None:
+                    print("check if future target image present")
+                    if self.find_image(source_img, future_target_img):
+                        print("future target image presented")
+                        return
+            raise ValueError(f"Cannot Find Image: {identifier}")
+        except Exception as e:
+            print(f"Exception: {e}")
+            if retry_count <= 0:
+                raise
+            is_expedition = self.check_and_refresh_expedition()
+            print(f"Found expedition? {is_expedition}")
+            if is_expedition:
+                self.better_click_target(target_img, future_target_img, retry_count, 0.2, identifier)
+            self.better_click_target(target_img, future_target_img, retry_count - 1, 0.2, identifier)
 
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()
