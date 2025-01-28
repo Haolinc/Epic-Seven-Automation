@@ -31,8 +31,8 @@ class ShopRefresh:
     def buy_covenant(self):
         self.utilities.click_by_position(target_img=self.covenant, future_target_img=self.covenant_buy_confirmation,
                                          position_offset=(850, 25), identifier="Buy Covenant Button")
-        self.utilities.better_click_target(target_img=self.covenant_buy_confirmation, future_target_img=self.shop_icon,
-                                           identifier="Buy Covenant Confirmation Button")
+        self.utilities.click_target(target_img=self.covenant_buy_confirmation, future_target_img=self.shop_icon,
+                                    identifier="Buy Covenant Confirmation Button")
 
     def check_mystic(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(), target_img=self.mystic,
@@ -41,14 +41,14 @@ class ShopRefresh:
     def buy_mystic(self):
         self.utilities.click_by_position(target_img=self.mystic, future_target_img=self.mystic_buy_confirmation,
                                          position_offset=(850, 25), identifier="Buy Mystic Button")
-        self.utilities.better_click_target(target_img=self.mystic_buy_confirmation, future_target_img=self.shop_icon,
-                                           identifier="Buy Mystic Confirmation Button")
+        self.utilities.click_target(target_img=self.mystic_buy_confirmation, future_target_img=self.shop_icon,
+                                    identifier="Buy Mystic Confirmation Button")
 
     def refresh_shop(self):
-        self.utilities.better_click_target(target_img=self.refresh, future_target_img=self.refresh_confirm,
-                                           identifier="Refresh Button")
-        self.utilities.better_click_target(target_img=self.refresh_confirm, future_target_img=self.shop_icon,
-                                           identifier="Refresh Confirmation Button")
+        self.utilities.click_target(target_img=self.refresh, future_target_img=self.refresh_confirm,
+                                    identifier="Refresh Button")
+        self.utilities.click_target(target_img=self.refresh_confirm, future_target_img=self.shop_icon,
+                                    identifier="Refresh Confirmation Button")
 
     def check_bookmark_and_update_log(self):
         if self.check_covenant():

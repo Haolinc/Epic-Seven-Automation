@@ -44,42 +44,42 @@ class DailyArena:
             (PathConverter.get_current_path("image\\arena_asset", "Quick_Confirm_Button.png")))
 
     def select_arena(self):
-        self.utilities.better_click_target(target_img=self.NPC_challenge,
-                                           future_target_img=self.NPC_challenge_identifier,
-                                           identifier="find npc challenge")
+        self.utilities.click_target(target_img=self.NPC_challenge,
+                                    future_target_img=self.NPC_challenge_identifier,
+                                    identifier="find npc challenge")
 
     def challenge_opponent(self):
-        self.utilities.better_click_target(target_img=self.NPC_icon,
-                                           future_target_img=self.challenge_button,
-                                           identifier="find NPC_icon")
-        self.utilities.better_click_target(target_img=self.challenge_button,
-                                           future_target_img=self.match_window_identifier, retry_count=5,
-                                           identifier="find challenge_button")
+        self.utilities.click_target(target_img=self.NPC_icon,
+                                    future_target_img=self.challenge_button,
+                                    identifier="find NPC_icon")
+        self.utilities.click_target(target_img=self.challenge_button,
+                                    future_target_img=self.match_window_identifier, retry_count=5,
+                                    identifier="find challenge_button")
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.quick_start_button)):
-            self.utilities.better_click_target(target_img=self.quick_start_button, identifier="find quick start button")
+            self.utilities.click_target(target_img=self.quick_start_button, identifier="find quick start button")
             self.gear_check_notification()
-            self.utilities.better_click_target(target_img=self.quick_confirm_button,
-                                               future_target_img=self.NPC_challenge_identifier,
-                                               identifier="find quick_confirm_button")
+            self.utilities.click_target(target_img=self.quick_confirm_button,
+                                        future_target_img=self.NPC_challenge_identifier,
+                                        identifier="find quick_confirm_button")
         else:
-            self.utilities.better_click_target(target_img=self.start_button, identifier="find start button")
+            self.utilities.click_target(target_img=self.start_button, identifier="find start button")
             self.gear_check_notification()
-            self.utilities.better_click_target(target_img=self.auto_battle_button, timeout=10,
-                                               identifier="find auto_battle_button")
-            self.utilities.better_click_target(target_img=self.quick_confirm_button,
-                                               future_target_img=self.NPC_challenge_identifier,
-                                               timeout=60, identifier="find quick_confirm_button")
+            self.utilities.click_target(target_img=self.auto_battle_button, timeout=10,
+                                        identifier="find auto_battle_button")
+            self.utilities.click_target(target_img=self.quick_confirm_button,
+                                        future_target_img=self.NPC_challenge_identifier,
+                                        timeout=60, identifier="find quick_confirm_button")
 
     def buy_extra_flag(self):
-        self.utilities.better_click_target(target_img=self.arena_flag_icon, future_target_img=self.friendship_point,
-                                           identifier="find arena_flag_icon")
-        self.utilities.better_click_target(target_img=self.friendship_point, future_target_img=self.flag_buy_button,
-                                           identifier="find friendship_point")
-        self.utilities.better_click_target(target_img=self.flag_buy_button, identifier="find flag_buy_button")
+        self.utilities.click_target(target_img=self.arena_flag_icon, future_target_img=self.friendship_point,
+                                    identifier="find arena_flag_icon")
+        self.utilities.click_target(target_img=self.friendship_point, future_target_img=self.flag_buy_button,
+                                    identifier="find friendship_point")
+        self.utilities.click_target(target_img=self.flag_buy_button, identifier="find flag_buy_button")
 
     def gear_check_notification(self):
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.do_not_display)):
-            self.utilities.better_click_target(target_img=self.do_not_display, identifier="Do_Not_Display_Button")
+            self.utilities.click_target(target_img=self.do_not_display, identifier="Do_Not_Display_Button")
 
     def run_arena_automation_subprocess(self, total_iteration, run_with_friendship_flag):
         try:
