@@ -1,4 +1,3 @@
-import random
 import time
 from typing import Tuple
 
@@ -24,10 +23,15 @@ class Utilities:
 
     def get_numpy_screenshot(self):
         blur_screenshot = cv2.GaussianBlur(numpy.array(self.device.screenshot()), (5, 5), 0)
-        blur_hsv_screenshot = cv2.cvtColor(blur_screenshot, cv2.COLOR_BGR2HSV)
-        return blur_hsv_screenshot
+        return blur_screenshot
 
-    def find_image(self, source_img, target_img, confidence: float = 0.82) -> dict[any, any]:
+    def find_image(self, source_img, target_img, confidence: float = 0.82, color_sensitive: bool = False) -> dict[any, any]:
+        if color_sensitive:
+            source_img = cv2.cvtColor(source_img, cv2.COLOR_BGR2HSV)
+            target_img = cv2.cvtColor(target_img, cv2.COLOR_RGB2HSV)
+        else:
+            source_img = cv2.cvtColor(source_img, cv2.COLOR_BGR2GRAY)
+            target_img = cv2.cvtColor(target_img, cv2.COLOR_RGB2GRAY)
         result = cv2.matchTemplate(source_img, target_img, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
         print(f"confidence: {max_val}")
@@ -52,9 +56,8 @@ class Utilities:
     def process_image_from_disk(self, path: str) -> cv2.UMat | ndarray:
         image_umat = cv2.imread(path)
         blur_umat = cv2.GaussianBlur(image_umat, (5, 5), 0)
-        blur_hsv_umat = cv2.cvtColor(blur_umat, cv2.COLOR_RGB2HSV)
-        height, width = blur_hsv_umat.shape[:2]
-        return cv2.resize(blur_hsv_umat, self.get_relative_coord((width, height)), interpolation=cv2.INTER_LINEAR_EXACT)
+        height, width = blur_umat.shape[:2]
+        return cv2.resize(blur_umat, self.get_relative_coord((width, height)), interpolation=cv2.INTER_LINEAR_EXACT)
 
     def save_image(self, save_file_name: str = "some.png"):
         self.device.screenshot().save(save_file_name)
@@ -91,7 +94,7 @@ class Utilities:
                 return True
             if future_target_img is not None:
                 print("check if future target image present")
-                if self.find_image(source_img, future_target_img):
+                if bool(self.find_image(source_img, future_target_img)):
                     print("future target image presented")
                     return
             raise ValueError(f"Cannot Find Image: {identifier}")
@@ -104,13 +107,14 @@ class Utilities:
             # Re-click on target with new screenshot
             self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
 
-    def click_target(self, target_img=None, future_target_img=None, retry_count: int = 2, timeout: float = 0.2,
-                     identifier: str = "default"):
+    def click_target(self, target_img=None, future_target_img=None, retry_count: int = 3, timeout: float = 0.5,
+                     color_sensitive: bool = False, identifier: str = "default"):
         try:
             start_time = time.time()
             while time.time() - start_time < timeout:
                 source_img = self.get_numpy_screenshot()
-                target_img_pos = self.find_image(source_img, target_img)
+                target_img_pos = self.find_image(source_img=source_img, target_img=target_img,
+                                                 color_sensitive=color_sensitive)
                 if bool(target_img_pos):
                     print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
                     result = target_img_pos.get("result")
@@ -120,7 +124,8 @@ class Utilities:
                         # Wait for animation
                         time.sleep(0.5)
                         print("clicked, looking for future target img")
-                        future_img_result = self.find_image(self.get_numpy_screenshot(), future_target_img)
+                        future_img_result = self.find_image(source_img=self.get_numpy_screenshot(),
+                                                            target_img=future_target_img, color_sensitive=color_sensitive)
                         print(f"future img result: {future_img_result}")
                         if not bool(future_img_result):
                             print("future image not found, trying again")
@@ -128,7 +133,8 @@ class Utilities:
                     return
                 if future_target_img is not None:
                     print("check if future target image present")
-                    if self.find_image(source_img, future_target_img):
+                    if bool(self.find_image(source_img=source_img, target_img=future_target_img,
+                                            color_sensitive=color_sensitive)):
                         print("future target image presented")
                         return
             raise ValueError(f"Cannot Find Image: {identifier}")
@@ -139,8 +145,8 @@ class Utilities:
             is_expedition = self.check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             if is_expedition:
-                self.click_target(target_img, future_target_img, retry_count, 0.2, identifier)
-            self.click_target(target_img, future_target_img, retry_count - 1, 0.2, identifier)
+                self.click_target(target_img, future_target_img, retry_count, 0.5, color_sensitive, identifier)
+            self.click_target(target_img, future_target_img, retry_count - 1, 0.5, color_sensitive, identifier)
 
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()

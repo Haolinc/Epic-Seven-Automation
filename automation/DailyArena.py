@@ -50,14 +50,13 @@ class DailyArena:
 
     def challenge_opponent(self):
         self.utilities.click_target(target_img=self.NPC_icon,
-                                    future_target_img=self.challenge_button,
-                                    identifier="find NPC_icon")
-        self.utilities.click_target(target_img=self.challenge_button,
-                                    future_target_img=self.match_window_identifier, retry_count=5,
-                                    identifier="find challenge_button")
+                                    future_target_img=self.challenge_button, timeout=5, identifier="find NPC_icon")
+        self.utilities.click_target(target_img=self.challenge_button, future_target_img=self.match_window_identifier,
+                                    retry_count=5, color_sensitive=True, identifier="find challenge_button")
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.quick_start_button)):
             self.utilities.click_target(target_img=self.quick_start_button, identifier="find quick start button")
             self.gear_check_notification()
+            time.sleep(3)
             self.utilities.click_target(target_img=self.quick_confirm_button,
                                         future_target_img=self.NPC_challenge_identifier,
                                         identifier="find quick_confirm_button")
@@ -93,7 +92,6 @@ class DailyArena:
             for current_iteration in range(total_iteration):
                 self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Iteration: {current_iteration + 1}"))
                 self.challenge_opponent()
-                time.sleep(3)
                 self.msg_queue.put(
                     UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Iteration: {current_iteration + 1} ended"))
             self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, "Arena automation completed!"))

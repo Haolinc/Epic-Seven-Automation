@@ -26,7 +26,7 @@ class ShopRefresh:
 
     def check_covenant(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
-                                              target_img=self.covenant, confidence=0.93))
+                                              target_img=self.covenant, confidence=0.93, color_sensitive=True))
 
     def buy_covenant(self):
         self.utilities.click_by_position(target_img=self.covenant, future_target_img=self.covenant_buy_confirmation,
@@ -36,7 +36,7 @@ class ShopRefresh:
 
     def check_mystic(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(), target_img=self.mystic,
-                                              confidence=0.93))
+                                              confidence=0.93, color_sensitive=True))
 
     def buy_mystic(self):
         self.utilities.click_by_position(target_img=self.mystic, future_target_img=self.mystic_buy_confirmation,
