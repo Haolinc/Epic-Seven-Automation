@@ -56,18 +56,18 @@ class DailyArena:
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.quick_start_button)):
             self.utilities.click_target(target_img=self.quick_start_button, identifier="find quick start button")
             self.gear_check_notification()
-            time.sleep(3)
             self.utilities.click_target(target_img=self.quick_confirm_button,
-                                        future_target_img=self.NPC_challenge_identifier,
-                                        identifier="find quick_confirm_button")
+                                        future_target_img=self.NPC_challenge_identifier, timeout=10,
+                                        color_sensitive=True, confidence=0.93, identifier="find quick_confirm_button")
         else:
             self.utilities.click_target(target_img=self.start_button, identifier="find start button")
             self.gear_check_notification()
             self.utilities.click_target(target_img=self.auto_battle_button, timeout=10,
                                         identifier="find auto_battle_button")
             self.utilities.click_target(target_img=self.quick_confirm_button,
-                                        future_target_img=self.NPC_challenge_identifier,
-                                        timeout=60, identifier="find quick_confirm_button")
+                                        future_target_img=self.NPC_challenge_identifier, timeout=60,
+                                        identifier="find quick_confirm_button")
+        time.sleep(3)   # Need around 3 seconds for animation
 
     def buy_extra_flag(self):
         self.utilities.click_target(target_img=self.arena_flag_icon, future_target_img=self.friendship_point,
@@ -78,7 +78,8 @@ class DailyArena:
 
     def gear_check_notification(self):
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.do_not_display)):
-            self.utilities.click_target(target_img=self.do_not_display, identifier="Do_Not_Display_Button")
+            self.utilities.click_target(target_img=self.do_not_display, future_target_img=self.quick_confirm_button,
+                                        identifier="Do_Not_Display_Button")
 
     def run_arena_automation_subprocess(self, total_iteration, run_with_friendship_flag):
         try:

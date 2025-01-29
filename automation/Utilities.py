@@ -108,12 +108,12 @@ class Utilities:
             self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
 
     def click_target(self, target_img=None, future_target_img=None, retry_count: int = 3, timeout: float = 0.5,
-                     color_sensitive: bool = False, identifier: str = "default"):
+                     color_sensitive: bool = False, confidence=0.8, identifier: str = "default"):
         try:
             start_time = time.time()
             while time.time() - start_time < timeout:
                 source_img = self.get_numpy_screenshot()
-                target_img_pos = self.find_image(source_img=source_img, target_img=target_img,
+                target_img_pos = self.find_image(source_img=source_img, target_img=target_img, confidence=confidence,
                                                  color_sensitive=color_sensitive)
                 if bool(target_img_pos):
                     print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
@@ -125,7 +125,8 @@ class Utilities:
                         time.sleep(0.5)
                         print("clicked, looking for future target img")
                         future_img_result = self.find_image(source_img=self.get_numpy_screenshot(),
-                                                            target_img=future_target_img, color_sensitive=color_sensitive)
+                                                            target_img=future_target_img, confidence=confidence,
+                                                            color_sensitive=color_sensitive)
                         print(f"future img result: {future_img_result}")
                         if not bool(future_img_result):
                             print("future image not found, trying again")
@@ -133,7 +134,7 @@ class Utilities:
                     return
                 if future_target_img is not None:
                     print("check if future target image present")
-                    if bool(self.find_image(source_img=source_img, target_img=future_target_img,
+                    if bool(self.find_image(source_img=source_img, target_img=future_target_img, confidence=confidence,
                                             color_sensitive=color_sensitive)):
                         print("future target image presented")
                         return
@@ -145,8 +146,8 @@ class Utilities:
             is_expedition = self.check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             if is_expedition:
-                self.click_target(target_img, future_target_img, retry_count, 0.5, color_sensitive, identifier)
-            self.click_target(target_img, future_target_img, retry_count - 1, 0.5, color_sensitive, identifier)
+                self.click_target(target_img, future_target_img, retry_count, 0.5, color_sensitive, confidence, identifier)
+            self.click_target(target_img, future_target_img, retry_count - 1, 0.5, color_sensitive, confidence, identifier)
 
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()
