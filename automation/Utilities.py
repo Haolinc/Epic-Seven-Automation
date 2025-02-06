@@ -21,9 +21,11 @@ class Utilities:
         print(f"Ratio: {self.screen_width/self.screen_height}")
         self.try_again = self.process_image_from_disk(PathConverter.get_current_path("image\\shop_refresh_asset", "TryAgain.png"))
 
+    def blur_image(self, image):
+        return cv2.GaussianBlur(numpy.array(image), (5, 5), 0)
+
     def get_numpy_screenshot(self):
-        blur_screenshot = cv2.GaussianBlur(numpy.array(self.device.screenshot()), (5, 5), 0)
-        return blur_screenshot
+        return self.blur_image(self.device.screenshot())
 
     def find_image(self, source_img, target_img, confidence: float = 0.82, color_sensitive: bool = False) -> dict[any, any]:
         if color_sensitive:
@@ -55,7 +57,7 @@ class Utilities:
 
     def process_image_from_disk(self, path: str) -> cv2.UMat | ndarray:
         image_umat = cv2.imread(path)
-        blur_umat = cv2.GaussianBlur(image_umat, (5, 5), 0)
+        blur_umat = self.blur_image(image_umat)
         height, width = blur_umat.shape[:2]
         return cv2.resize(blur_umat, self.get_relative_coord((width, height)), interpolation=cv2.INTER_LINEAR_EXACT)
 
@@ -70,8 +72,8 @@ class Utilities:
         center_y = 500
         self.device.click(center_x, center_y)
 
-    def click_by_position(self, target_img=None, future_target_img=None, position_offset=(0, 0), retry_count: int = 3,
-                          identifier: str = "default"):
+    def click_target_offset(self, target_img=None, future_target_img=None, position_offset=(0, 0), retry_count: int = 3,
+                            identifier: str = "default"):
         try:
             source_img = self.get_numpy_screenshot()
             target_img_pos = self.find_image(source_img, target_img)
@@ -105,7 +107,7 @@ class Utilities:
             is_expedition = self.check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             # Re-click on target with new screenshot
-            self.click_by_position(target_img, future_target_img, position_offset, retry_count - 1, identifier)
+            self.click_target_offset(target_img, future_target_img, position_offset, retry_count - 1, identifier)
 
     def click_target(self, target_img=None, future_target_img=None, retry_count: int = 3, timeout: float = 0.5,
                      color_sensitive: bool = False, confidence=0.8, identifier: str = "default"):

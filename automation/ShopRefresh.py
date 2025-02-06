@@ -29,8 +29,8 @@ class ShopRefresh:
                                               target_img=self.covenant, confidence=0.93, color_sensitive=True))
 
     def buy_covenant(self):
-        self.utilities.click_by_position(target_img=self.covenant, future_target_img=self.covenant_buy_confirmation,
-                                         position_offset=(850, 25), identifier="Buy Covenant Button")
+        self.utilities.click_target_offset(target_img=self.covenant, future_target_img=self.covenant_buy_confirmation,
+                                           position_offset=(850, 25), identifier="Buy Covenant Button")
         self.utilities.click_target(target_img=self.covenant_buy_confirmation, future_target_img=self.shop_icon,
                                     identifier="Buy Covenant Confirmation Button")
 
@@ -39,8 +39,8 @@ class ShopRefresh:
                                               confidence=0.93, color_sensitive=True))
 
     def buy_mystic(self):
-        self.utilities.click_by_position(target_img=self.mystic, future_target_img=self.mystic_buy_confirmation,
-                                         position_offset=(850, 25), identifier="Buy Mystic Button")
+        self.utilities.click_target_offset(target_img=self.mystic, future_target_img=self.mystic_buy_confirmation,
+                                           position_offset=(850, 25), identifier="Buy Mystic Button")
         self.utilities.click_target(target_img=self.mystic_buy_confirmation, future_target_img=self.shop_icon,
                                     identifier="Buy Mystic Confirmation Button")
 
