@@ -33,6 +33,7 @@ class ShopRefresh:
                                            position_offset=(850, 25), identifier="Buy Covenant Button")
         self.utilities.click_target(target_tagged_img=self.covenant_buy_confirmation, future_tagged_imgs=self.shop_icon,
                                     identifier="Buy Covenant Confirmation Button")
+        self.msg_queue.put(UIMessage(UIThreadMessage.COVENANT_FOUND))
 
     def check_mystic(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
@@ -43,6 +44,7 @@ class ShopRefresh:
                                            position_offset=(850, 25), identifier="Buy Mystic Button")
         self.utilities.click_target(target_tagged_img=self.mystic_buy_confirmation, future_tagged_imgs=self.shop_icon,
                                     identifier="Buy Mystic Confirmation Button")
+        self.msg_queue.put(UIMessage(UIThreadMessage.MYSTIC_FOUND))
 
     def refresh_shop(self):
         self.utilities.click_target(target_tagged_img=self.refresh, future_tagged_imgs=self.refresh_confirm,
