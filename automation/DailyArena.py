@@ -61,7 +61,7 @@ class DailyArena:
                                         timeout=5, identifier="find quick start button")
             self.gear_check_notification()
             self.utilities.click_target(target_tagged_img=self.quick_confirm_button,
-                                        future_tagged_imgs=self.NPC_challenge_identifier, timeout=10,
+                                        future_tagged_imgs=self.NPC_challenge_identifier, timeout=10, cache_click=False,
                                         color_sensitive=True, confidence=0.93, identifier="find quick_confirm_button")
         else:
             self.utilities.click_target(target_tagged_img=self.start_button,
@@ -72,7 +72,7 @@ class DailyArena:
                                         future_tagged_imgs=self.auto_battle_identifier, timeout=10,
                                         identifier="find auto_battle_button")
             self.utilities.click_target(target_tagged_img=self.quick_confirm_button,
-                                        future_tagged_imgs=self.NPC_challenge_identifier, timeout=60,
+                                        future_tagged_imgs=self.NPC_challenge_identifier, timeout=60, cache_click=False,
                                         identifier="find quick_confirm_button")
         time.sleep(3)   # Need around 3 seconds for animation
 
