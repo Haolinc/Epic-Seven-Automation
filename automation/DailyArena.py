@@ -44,6 +44,8 @@ class DailyArena:
             (PathConverter.get_current_path("image\\arena_asset", "Quick_Start_Button.png")))
         self.quick_confirm_button = utilities.process_image_from_disk(
             (PathConverter.get_current_path("image\\arena_asset", "Quick_Confirm_Button.png")))
+        self.empty_quick_match = utilities.process_image_from_disk(
+            (PathConverter.get_current_path("image\\arena_asset", "Empty_Quick_Match.png")))
 
     def select_arena(self):
         self.utilities.click_target(target_tagged_img=self.NPC_challenge,
@@ -64,6 +66,7 @@ class DailyArena:
                                         future_tagged_imgs=self.NPC_challenge_identifier, timeout=10, cache_click=False,
                                         color_sensitive=True, confidence=0.93, identifier="find quick_confirm_button")
         else:
+            self.empty_quick_match_check()
             self.utilities.click_target(target_tagged_img=self.start_button,
                                         future_tagged_imgs=[self.do_not_display, self.auto_battle_button], timeout=5,
                                         identifier="find start button")
@@ -87,6 +90,11 @@ class DailyArena:
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.do_not_display.image)):
             self.utilities.click_target(target_tagged_img=self.do_not_display, future_tagged_imgs=self.quick_confirm_button,
                                         identifier="Do_Not_Display_Button")
+
+    def empty_quick_match_check(self):
+        if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.empty_quick_match.image)):
+            self.utilities.click_target(target_tagged_img=self.empty_quick_match, future_tagged_imgs=self.start_button,
+                                        identifier="Empty_Quick_Match")
 
     def run_arena_automation_subprocess(self, total_iteration, run_with_friendship_flag):
         try:
