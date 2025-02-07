@@ -4,9 +4,9 @@ from typing import Tuple
 import adbutils
 import cv2
 import numpy
-from numpy import ndarray
 
 import PathConverter
+from automation.TaggedImage import TaggedImage
 
 
 class Utilities:
@@ -20,6 +20,7 @@ class Utilities:
         print(f"Screen Size: {self.screen_width, self.screen_height}")
         print(f"Ratio: {self.screen_width/self.screen_height}")
         self.try_again = self.process_image_from_disk(PathConverter.get_current_path("image\\shop_refresh_asset", "TryAgain.png"))
+        self.position_cache: dict[str, tuple[int, int]] = {}
 
     def blur_image(self, image):
         return cv2.GaussianBlur(numpy.array(image), (5, 5), 0)
@@ -55,11 +56,13 @@ class Utilities:
         else:
             return int(coord[0] / 1920 * self.screen_width), int(coord[1] / 1080 * self.screen_height)
 
-    def process_image_from_disk(self, path: str) -> cv2.UMat | ndarray:
+    def process_image_from_disk(self, path: str) -> TaggedImage:
         image_umat = cv2.imread(path)
         blur_umat = self.blur_image(image_umat)
         height, width = blur_umat.shape[:2]
-        return cv2.resize(blur_umat, self.get_relative_coord((width, height)), interpolation=cv2.INTER_LINEAR_EXACT)
+        adjusted_image = cv2.resize(blur_umat, self.get_relative_coord((width, height)),
+                                    interpolation=cv2.INTER_LINEAR_EXACT)
+        return TaggedImage(adjusted_image, path.split("\\")[-1].split(".")[0])
 
     def save_image(self, save_file_name: str = "some.png"):
         self.device.screenshot().save(save_file_name)
@@ -109,52 +112,72 @@ class Utilities:
             # Re-click on target with new screenshot
             self.click_target_offset(target_img, future_target_img, position_offset, retry_count - 1, identifier)
 
-    def click_target(self, target_img=None, future_target_img=None, retry_count: int = 3, timeout: float = 0.5,
-                     color_sensitive: bool = False, confidence=0.8, identifier: str = "default"):
+    def click_target(self, target_tagged_img=None, future_tagged_imgs=None, retry_count: int = 3, timeout: float = 0.5,
+                     color_sensitive: bool = False, confidence=0.8, identifier: str = "default",
+                     cache_click: bool = True):
         try:
+            if type(future_tagged_imgs) is not list:
+                future_tagged_imgs = [future_tagged_imgs]
             start_time = time.time()
             while time.time() - start_time < timeout:
+                if target_tagged_img.tag in self.position_cache and cache_click:
+                    position = self.position_cache.get(target_tagged_img.tag)
+                    self.device.click(position[0], position[1])
+                    # Future image operations:
+                    # Wait for animation
+                    time.sleep(0.5)
+                    source_img = self.get_numpy_screenshot()
+                    for tagged_img in future_tagged_imgs:
+                        future_img_result = self.find_image(source_img=source_img,
+                                                            target_img=tagged_img.image,
+                                                            confidence=confidence, color_sensitive=color_sensitive)
+                        # only return when the future image is found
+                        # otherwise double check if image located in other place
+                        if bool(future_img_result):
+                            return
+                    cache_click = False
+
                 source_img = self.get_numpy_screenshot()
-                target_img_pos = self.find_image(source_img=source_img, target_img=target_img, confidence=confidence,
-                                                 color_sensitive=color_sensitive)
+                target_img_pos = self.find_image(source_img=source_img, target_img=target_tagged_img.image,
+                                                 confidence=confidence, color_sensitive=color_sensitive)
                 if bool(target_img_pos):
-                    print(f"identifier: {identifier}, img value: {str(target_img_pos)}")
                     result = target_img_pos.get("result")
+                    self.position_cache[target_tagged_img.tag] = result
                     self.device.click(result[0], result[1])
-                    # Check if it actually clicked if future_target_img is provided
-                    if future_target_img is not None:
-                        # Wait for animation
-                        time.sleep(0.5)
-                        print("clicked, looking for future target img")
-                        future_img_result = self.find_image(source_img=self.get_numpy_screenshot(),
-                                                            target_img=future_target_img, confidence=confidence,
-                                                            color_sensitive=color_sensitive)
-                        print(f"future img result: {future_img_result}")
-                        if not bool(future_img_result):
-                            print("future image not found, trying again")
-                            raise ValueError(f"Future Image Not Found For: {identifier}")
-                    return
-                if future_target_img is not None:
-                    print("check if future target image present")
-                    if bool(self.find_image(source_img=source_img, target_img=future_target_img, confidence=confidence,
-                                            color_sensitive=color_sensitive)):
-                        print("future target image presented")
-                        return
-            raise ValueError(f"Cannot Find Image: {identifier}")
+
+                    # Future image operations:
+                    # Wait for animation
+                    time.sleep(0.5)
+                    source_img = self.get_numpy_screenshot()
+                    for tagged_img in future_tagged_imgs:
+                        future_img_result = self.find_image(source_img=source_img, target_img=tagged_img.image,
+                                                            confidence=confidence, color_sensitive=color_sensitive)
+                        # only return when the future image is found
+                        if bool(future_img_result):
+                            return
+
+                if future_tagged_imgs:
+                    for tagged_img in future_tagged_imgs:
+                        if bool(self.find_image(source_img=self.get_numpy_screenshot(), target_img=tagged_img.image,
+                                                confidence=confidence, color_sensitive=color_sensitive)):
+                            return
+            raise ValueError(f"Cannot Find Image")
         except Exception as e:
-            print(f"Exception: {e}")
+            print(f"Exception: {e}, Identifier: {identifier}")
             if retry_count <= 0:
-                raise
+                raise ValueError(f"Exception: {e}, Identifier: {identifier}")
             is_expedition = self.check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             if is_expedition:
-                self.click_target(target_img, future_target_img, retry_count, 0.5, color_sensitive, confidence, identifier)
-            self.click_target(target_img, future_target_img, retry_count - 1, 0.5, color_sensitive, confidence, identifier)
+                self.click_target(target_tagged_img, future_tagged_imgs, retry_count, 0.5, color_sensitive, confidence,
+                                  identifier, False)
+            self.click_target(target_tagged_img, future_tagged_imgs, retry_count - 1, 0.5, color_sensitive, confidence,
+                              identifier, False)
 
     def check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()
-        if self.find_image(source_img=current_screenshot, target_img=self.try_again):
-            self.click_target(target_img=self.try_again, identifier="refresh expedition")
+        if self.find_image(source_img=current_screenshot, target_img=self.try_again.image):
+            self.click_target(target_tagged_img=self.try_again, identifier="refresh expedition")
             time.sleep(2)  # Wait for a bit to check if there are some other expedition coming in
             self.swipe_down()  # Need to click at least once if another expedition popping up
             return True

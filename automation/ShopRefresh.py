@@ -26,28 +26,28 @@ class ShopRefresh:
 
     def check_covenant(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
-                                              target_img=self.covenant, confidence=0.93, color_sensitive=True))
+                                              target_img=self.covenant.image, confidence=0.93, color_sensitive=True))
 
     def buy_covenant(self):
-        self.utilities.click_target_offset(target_img=self.covenant, future_target_img=self.covenant_buy_confirmation,
+        self.utilities.click_target_offset(target_img=self.covenant.image, future_target_img=self.covenant_buy_confirmation.image,
                                            position_offset=(850, 25), identifier="Buy Covenant Button")
-        self.utilities.click_target(target_img=self.covenant_buy_confirmation, future_target_img=self.shop_icon,
+        self.utilities.click_target(target_tagged_img=self.covenant_buy_confirmation, future_tagged_imgs=self.shop_icon,
                                     identifier="Buy Covenant Confirmation Button")
 
     def check_mystic(self) -> bool:
-        return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(), target_img=self.mystic,
-                                              confidence=0.93, color_sensitive=True))
+        return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
+                                              target_img=self.mystic.image, confidence=0.93, color_sensitive=True))
 
     def buy_mystic(self):
-        self.utilities.click_target_offset(target_img=self.mystic, future_target_img=self.mystic_buy_confirmation,
+        self.utilities.click_target_offset(target_img=self.mystic.image, future_target_img=self.mystic_buy_confirmation.image,
                                            position_offset=(850, 25), identifier="Buy Mystic Button")
-        self.utilities.click_target(target_img=self.mystic_buy_confirmation, future_target_img=self.shop_icon,
+        self.utilities.click_target(target_tagged_img=self.mystic_buy_confirmation, future_tagged_imgs=self.shop_icon,
                                     identifier="Buy Mystic Confirmation Button")
 
     def refresh_shop(self):
-        self.utilities.click_target(target_img=self.refresh, future_target_img=self.refresh_confirm,
+        self.utilities.click_target(target_tagged_img=self.refresh, future_tagged_imgs=self.refresh_confirm,
                                     identifier="Refresh Button")
-        self.utilities.click_target(target_img=self.refresh_confirm, future_target_img=self.shop_icon,
+        self.utilities.click_target(target_tagged_img=self.refresh_confirm, future_tagged_imgs=self.shop_icon,
                                     identifier="Refresh Confirmation Button")
 
     def check_bookmark_and_update_log(self):
