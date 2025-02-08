@@ -74,9 +74,9 @@ class DailyArena:
             self.utilities.click_target(target_tagged_img=self.auto_battle_button,
                                         future_tagged_imgs=self.auto_battle_identifier, timeout=10,
                                         identifier="find auto_battle_button")
-            self.utilities.click_target(target_tagged_img=self.quick_confirm_button,
+            self.utilities.click_target(target_tagged_img=self.confirm_Button,
                                         future_tagged_imgs=self.NPC_challenge_identifier, timeout=60, cache_click=False,
-                                        identifier="find quick_confirm_button")
+                                        identifier="find confirm_Button")
         time.sleep(3)   # Need around 3 seconds for animation
 
     def buy_extra_flag(self):
@@ -84,7 +84,8 @@ class DailyArena:
                                     identifier="find arena_flag_icon")
         self.utilities.click_target(target_tagged_img=self.friendship_point, future_tagged_imgs=self.flag_buy_button,
                                     identifier="find friendship_point")
-        self.utilities.click_target(target_tagged_img=self.flag_buy_button, identifier="find flag_buy_button")
+        self.utilities.click_target(target_tagged_img=self.flag_buy_button,
+                                    future_tagged_imgs=self.NPC_icon, identifier="find flag_buy_button")
 
     def gear_check_notification(self):
         if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.do_not_display.image)):
