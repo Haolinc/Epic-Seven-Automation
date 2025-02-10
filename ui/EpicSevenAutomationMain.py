@@ -12,9 +12,9 @@ from ui.UIComponentEnum import *
 tk.set_appearance_mode("System")
 
 
-class MainWindow(tk.CTk):
-    def __init__(self, utilities: Utilities):
-        super().__init__()
+class MainWindow(tk.CTkToplevel):
+    def __init__(self, root, utilities: Utilities):
+        super().__init__(root)
         self.log_frame = None
         self.refresh_shop_count_entry = None
         self.arena_count_entry = None
@@ -37,6 +37,7 @@ class MainWindow(tk.CTk):
         self.grid_columnconfigure(0, weight=1)
         self.create_main_widgets()
         self.ui_listener = Listener(self)
+        self.protocol("WM_DELETE_WINDOW", self.master.destroy)
 
     def create_main_widgets(self):
         # Main frame setup
@@ -123,9 +124,6 @@ class MainWindow(tk.CTk):
             UIHelper.add_label_to_frame(frame=self.log_frame,
                                         text="####### Process Stopping, Please Wait #######")
             self.daily_arena_process.stop_process()
-
-    def launch(self):
-        self.mainloop()
 
 
 class Listener:

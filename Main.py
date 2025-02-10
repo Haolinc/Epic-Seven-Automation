@@ -1,9 +1,15 @@
 from ui.DeviceSelection import DeviceSelectionUI
+import customtkinter as tk
 
 
-def run():
-    DeviceSelectionUI().launch()
+# This class acts as holder
+class RootWindow(tk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.withdraw()
 
 
 if __name__ == "__main__":
-    run()
+    root_window = RootWindow()
+    DeviceSelectionUI(root_window)
+    root_window.mainloop()

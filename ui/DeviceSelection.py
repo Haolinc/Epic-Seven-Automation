@@ -9,9 +9,11 @@ import PIL.Image as Image
 tk.set_appearance_mode("System")
 
 default_image = Image.open(PathConverter.get_current_path("image", "NoImageAvailable.png"))
-class DeviceSelectionUI(tk.CTk):
-    def __init__(self):
-        super().__init__()
+
+
+class DeviceSelectionUI(tk.CTkToplevel):
+    def __init__(self, root):
+        super().__init__(root)
         self.device_refresh_button = None
         self.startup_button = None
         self.adb_connection_menu = None
@@ -22,6 +24,7 @@ class DeviceSelectionUI(tk.CTk):
         self.geometry("500x500")
         self.create_startup_widgets()
         self.resizable(width=False, height=False)
+        self.protocol("WM_DELETE_WINDOW", self.master.destroy)
 
     def create_startup_widgets(self):
         self.startup_label = tk.CTkLabel(self, text="default text")
@@ -60,10 +63,7 @@ class DeviceSelectionUI(tk.CTk):
         choice_image = AdbConnector.serial_and_image_dict[choice]
         self.device_screenshot_image.configure(light_image=choice_image)
 
-    def launch(self):
-        self.mainloop()
-
     def launch_main_window(self):
-        self.destroy()
-        MainWindow(
-            utilities=Utilities(self.adb_connection_menu.get())).launch()
+        self.withdraw()
+        MainWindow(root=self.master, utilities=Utilities(self.adb_connection_menu.get()))
+
