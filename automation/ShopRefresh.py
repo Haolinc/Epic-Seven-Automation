@@ -68,7 +68,6 @@ class ShopRefresh:
                 self.utilities.swipe_down()
                 time.sleep(0.5)
                 self.check_bookmark_and_update_log()
-                # When refresh failed, Stop the application
                 self.refresh_shop()
                 current_iteration += 1
                 self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Iteration: {current_iteration}"))

@@ -14,10 +14,8 @@ class Utilities:
         self.device = adbutils.device(serial)
         print(self.device.shell('wm size'))
         screen_size = self.device.shell('wm size').split(": ")[-1]
-        print(screen_size)
         self.screen_width, self.screen_height = map(int, screen_size.split("x"))
         self.is_wide_screen = self.screen_width/self.screen_height > 2
-        print(f"Screen Size: {self.screen_width, self.screen_height}")
         print(f"Ratio: {self.screen_width/self.screen_height}")
         self.try_again = self.process_image_from_disk(PathConverter.get_current_path("image\\shop_refresh_asset",
                                                                                      "Try_Again.png"))
@@ -27,9 +25,21 @@ class Utilities:
         return cv2.GaussianBlur(numpy.array(image), (5, 5), 0)
 
     def get_numpy_screenshot(self):
+        """
+        Get the blur version of screenshot in the adb device.
+        """
         return self.blur_image(self.device.screenshot())
 
     def find_image(self, source_img, target_img, confidence: float = 0.82, color_sensitive: bool = False) -> dict[any, any]:
+        """
+        Find the target image in source image and return mid-point of found area.
+
+        :param source_img: must be ndarray or UMat
+        :param target_img: must be ndarray or UMat
+        :param confidence: accuracy rate, from 0 to 1
+        :param color_sensitive: will lower accuracy if color is different
+        :return: the mid-point of found area if higher than designated confidence, otherwise empty {}
+        """
         if color_sensitive:
             source_img = cv2.cvtColor(source_img, cv2.COLOR_BGR2HSV)
             target_img = cv2.cvtColor(target_img, cv2.COLOR_RGB2HSV)
@@ -38,7 +48,6 @@ class Utilities:
             target_img = cv2.cvtColor(target_img, cv2.COLOR_RGB2GRAY)
         result = cv2.matchTemplate(source_img, target_img, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
-        print(f"confidence: {max_val}")
         if max_val >= confidence:
             top_left = max_loc
             bottom_right = (top_left[0] + target_img.shape[1], top_left[1] + target_img.shape[0])
@@ -48,8 +57,10 @@ class Utilities:
 
     def get_relative_coord(self, coord: Tuple[int, int]) -> Tuple[int, int]:
         """
-        :param coord: width, height
-        :return: width, height
+        Find the relative position for cropped image or position from 1920x1080 adb device to increase accuracy.
+
+        :param coord: must be in (width, height)
+        :return: new relative (width, height) position
         """
 
         if self.is_wide_screen:
@@ -58,6 +69,12 @@ class Utilities:
             return int(coord[0] / 1920 * self.screen_width), int(coord[1] / 1080 * self.screen_height)
 
     def process_image_from_disk(self, path: str) -> TaggedImage:
+        """
+        Process the image from given path to have unified image with identifier.
+
+        :param path: must be relative path from PathConverter.get_current_path()
+        :return: image with identifier
+        """
         image_umat = cv2.imread(path)
         blur_umat = self.blur_image(image_umat)
         height, width = blur_umat.shape[:2]
@@ -66,18 +83,31 @@ class Utilities:
         return TaggedImage(adjusted_image, path.split("\\")[-1].split(".")[0])
 
     def save_image(self, save_file_name: str = "some.png"):
+        """
+        Take a screenshot from adb device and save it to local.
+
+        :param save_file_name: desired filename
+        """
         self.device.screenshot().save(save_file_name)
 
     def swipe_down(self):
+        """
+        Quickly swipe down the adb device screen
+        """
         self.device.swipe(1400, 500, 1400, 200, 0.1)
-
-    def click_center_of_screen(self):
-        center_x = 500
-        center_y = 500
-        self.device.click(center_x, center_y)
 
     def click_target_offset(self, target_img=None, future_target_img=None, position_offset=(0, 0), retry_count: int = 3,
                             identifier: str = "default"):
+        """
+        Find and click the target image position on given offset position.
+        Future_target_img is to make sure a successful click.
+
+        :param target_img: must be ndarray or UMat, and it must be provided
+        :param future_target_img: must be ndarray or UMat
+        :param position_offset: click position offset from target_img
+        :param retry_count: number of retries when target_img or future_target_img not found
+        :param identifier: text to help where debugging if image not found
+        """
         try:
             source_img = self.get_numpy_screenshot()
             target_img_pos = self.find_image(source_img, target_img)
@@ -89,7 +119,6 @@ class Utilities:
                 self.device.click(click_position[0], click_position[1])
                 # Check if it actually clicked if future_target_img is provided
                 if future_target_img is not None:
-                    # Wait for animation
                     time.sleep(0.5)
                     print("looking for future target img")
                     future_img_result = self.find_image(self.get_numpy_screenshot(), future_target_img)
@@ -116,6 +145,19 @@ class Utilities:
     def click_target(self, target_tagged_img=None, future_tagged_imgs=None, retry_count: int = 3, timeout: float = 0.5,
                      color_sensitive: bool = False, confidence=0.8, identifier: str = "default",
                      cache_click: bool = True):
+        """
+        Find and click the target image, using caching technique to click faster.
+        Future_target_img is to make sure a successful click.
+
+        :param target_tagged_img: must be TaggedImage, and it must be provided
+        :param future_tagged_imgs: must be TaggedImage, and it must be provided
+        :param retry_count: number of retries when target_img or future_target_img not found
+        :param timeout: keep looking for given image in a given timeout
+        :param color_sensitive: will lower accuracy if color is different
+        :param confidence: accuracy rate, from 0 to 1
+        :param identifier: text to help where debugging if image not found
+        :param cache_click: decide whether cacheing is needed or not
+        """
         try:
             if type(future_tagged_imgs) is not list:
                 future_tagged_imgs = [future_tagged_imgs]
@@ -124,8 +166,6 @@ class Utilities:
                 if target_tagged_img.tag in self.position_cache and cache_click:
                     position = self.position_cache.get(target_tagged_img.tag)
                     self.device.click(position[0], position[1])
-                    # Future image operations:
-                    # Wait for animation
                     time.sleep(0.5)
                     source_img = self.get_numpy_screenshot()
                     for tagged_img in future_tagged_imgs:
@@ -138,6 +178,8 @@ class Utilities:
                             return
                     cache_click = False
 
+                # If cache click failed or not intended to cache click
+                # Normal click operation
                 source_img = self.get_numpy_screenshot()
                 target_img_pos = self.find_image(source_img=source_img, target_img=target_tagged_img.image,
                                                  confidence=confidence, color_sensitive=color_sensitive)
@@ -145,23 +187,18 @@ class Utilities:
                     result = target_img_pos.get("result")
                     self.position_cache[target_tagged_img.tag] = result
                     self.device.click(result[0], result[1])
-
-                    # Future image operations:
-                    # Wait for animation
                     time.sleep(0.5)
                     source_img = self.get_numpy_screenshot()
                     for tagged_img in future_tagged_imgs:
                         future_img_result = self.find_image(source_img=source_img, target_img=tagged_img.image,
                                                             confidence=confidence, color_sensitive=color_sensitive)
-                        # only return when the future image is found
                         if bool(future_img_result):
                             return
-
-                if future_tagged_imgs:
-                    for tagged_img in future_tagged_imgs:
-                        if bool(self.find_image(source_img=self.get_numpy_screenshot(), target_img=tagged_img.image,
-                                                confidence=confidence, color_sensitive=color_sensitive)):
-                            return
+                # Check again if the screenshot is already in correct page
+                for tagged_img in future_tagged_imgs:
+                    if bool(self.find_image(source_img=self.get_numpy_screenshot(), target_img=tagged_img.image,
+                                            confidence=confidence, color_sensitive=color_sensitive)):
+                        return
             raise ValueError(f"Cannot Find Image")
         except Exception as e:
             print(f"Exception: {e}, Identifier: {identifier}")
