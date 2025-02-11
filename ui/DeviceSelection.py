@@ -9,7 +9,7 @@ import PIL.Image as Image
 
 tk.set_appearance_mode("System")
 
-default_image = Image.open(PathConverter.get_current_path("image", "NoImageAvailable.png"))
+default_image = Image.open(PathConverter.get_current_path("image", "No_Image_Available.png"))
 
 
 class DeviceSelectionUI(tk.CTkToplevel):

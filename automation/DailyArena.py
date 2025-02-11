@@ -21,7 +21,7 @@ class DailyArena:
         self.match_window_identifier = utilities.process_image_from_disk(
             (PathConverter.get_current_path("image\\arena_asset", "Match_Window_Identifier.png")))
         self.arena_flag_icon = utilities.process_image_from_disk(
-            (PathConverter.get_current_path("image\\arena_asset", "Arena_flag_icon.png")))
+            (PathConverter.get_current_path("image\\arena_asset", "Arena_Flag_Icon.png")))
         self.friendship_point = utilities.process_image_from_disk(
             (PathConverter.get_current_path("image\\arena_asset", "Friendship_Point.png")))
         self.flag_buy_button = utilities.process_image_from_disk(
