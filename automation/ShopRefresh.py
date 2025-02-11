@@ -12,15 +12,15 @@ class ShopRefresh:
         self.covenant = utilities.process_image_from_disk(
             PathConverter.get_current_path("image\\shop_refresh_asset", "Covenant.png"))
         self.covenant_buy_confirmation = utilities.process_image_from_disk(
-            PathConverter.get_current_path("image\\shop_refresh_asset", "CovenantBuyConfirmation.png"))
+            PathConverter.get_current_path("image\\shop_refresh_asset", "Covenant_Buy_Confirmation.png"))
         self.mystic = utilities.process_image_from_disk(
             PathConverter.get_current_path("image\\shop_refresh_asset", "Mystic.png"))
         self.mystic_buy_confirmation = utilities.process_image_from_disk(
-            PathConverter.get_current_path("image\\shop_refresh_asset", "MysticBuyConfirmation.png"))
+            PathConverter.get_current_path("image\\shop_refresh_asset", "Mystic_Buy_Confirmation.png"))
         self.refresh = utilities.process_image_from_disk(
             PathConverter.get_current_path("image\\shop_refresh_asset", "Refresh.png"))
         self.refresh_confirm = utilities.process_image_from_disk(
-            PathConverter.get_current_path("image\\shop_refresh_asset", "RefreshConfirm.png"))
+            PathConverter.get_current_path("image\\shop_refresh_asset", "Refresh_Confirm.png"))
         self.shop_icon = utilities.process_image_from_disk(
             PathConverter.get_current_path("image\\shop_refresh_asset", "Shop.png"))
 

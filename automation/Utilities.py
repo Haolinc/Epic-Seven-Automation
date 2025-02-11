@@ -19,7 +19,8 @@ class Utilities:
         self.is_wide_screen = self.screen_width/self.screen_height > 2
         print(f"Screen Size: {self.screen_width, self.screen_height}")
         print(f"Ratio: {self.screen_width/self.screen_height}")
-        self.try_again = self.process_image_from_disk(PathConverter.get_current_path("image\\shop_refresh_asset", "TryAgain.png"))
+        self.try_again = self.process_image_from_disk(PathConverter.get_current_path("image\\shop_refresh_asset",
+                                                                                     "Try_Again.png"))
         self.position_cache: dict[str, tuple[int, int]] = {}
 
     def blur_image(self, image):
