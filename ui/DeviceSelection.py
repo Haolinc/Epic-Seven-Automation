@@ -3,6 +3,7 @@ import customtkinter as tk
 import AdbConnector
 import PathConverter
 from automation.Utilities import Utilities
+from ui import UIHelper
 from ui.EpicSevenAutomationMain import MainWindow
 import PIL.Image as Image
 
@@ -25,6 +26,7 @@ class DeviceSelectionUI(tk.CTkToplevel):
         self.create_startup_widgets()
         self.resizable(width=False, height=False)
         self.protocol("WM_DELETE_WINDOW", self.master.destroy)
+        UIHelper.set_window_icon(self)
 
     def create_startup_widgets(self):
         self.startup_label = tk.CTkLabel(self, text="default text")

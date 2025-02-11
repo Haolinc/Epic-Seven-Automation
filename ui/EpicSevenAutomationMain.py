@@ -38,6 +38,7 @@ class MainWindow(tk.CTkToplevel):
         self.create_main_widgets()
         self.ui_listener = Listener(self)
         self.protocol("WM_DELETE_WINDOW", self.master.destroy)
+        UIHelper.set_window_icon(self)
 
     def create_main_widgets(self):
         # Main frame setup

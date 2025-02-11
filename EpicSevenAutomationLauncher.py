@@ -1,3 +1,6 @@
+import multiprocessing
+import sys
+
 from ui.DeviceSelection import DeviceSelectionUI
 import customtkinter as tk
 
@@ -10,6 +13,8 @@ class RootWindow(tk.CTk):
 
 
 if __name__ == "__main__":
+    if sys.platform.startswith('win'):
+        multiprocessing.freeze_support()
     root_window = RootWindow()
     DeviceSelectionUI(root_window)
     root_window.mainloop()
