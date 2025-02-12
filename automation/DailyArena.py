@@ -80,10 +80,11 @@ class DailyArena:
         time.sleep(3)   # Need around 3 seconds for animation
 
     def buy_extra_flag(self):
-        self.utilities.click_target(target_tagged_img=self.arena_flag_icon, future_tagged_imgs=self.friendship_point,
+        self.utilities.click_target(target_tagged_img=self.arena_flag_icon, future_tagged_imgs=self.flag_buy_button,
                                     identifier="find arena_flag_icon")
-        self.utilities.click_target(target_tagged_img=self.friendship_point, future_tagged_imgs=self.flag_buy_button,
-                                    identifier="find friendship_point")
+        if bool(self.utilities.find_image(self.utilities.get_numpy_screenshot(), self.friendship_point.image)):
+            self.utilities.click_target(target_tagged_img=self.friendship_point, future_tagged_imgs=self.flag_buy_button,
+                                        identifier="find friendship_point")
         self.utilities.click_target(target_tagged_img=self.flag_buy_button,
                                     future_tagged_imgs=self.NPC_icon, identifier="find flag_buy_button")
 
