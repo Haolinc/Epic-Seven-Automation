@@ -29,7 +29,8 @@ Use ```pyinstaller --onefile --windowed --add-data="image:image" --add-data="pla
 Executable file usually located under project's ```dist``` folder.
 
 # Usage
-1. Launch the emulator, make sure your emulator is enabled with ADB.
+1. Launch the emulator, make sure your emulator is enabled with ADB. (LD Player, BlueStack, Google Play Games Developer Emulator, and even android phone with debugging mode on)
+
 ![ADBSetting](https://github.com/user-attachments/assets/537e7d17-5b62-4791-a95d-2b9b99f73a05)
 
 
