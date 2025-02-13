@@ -32,7 +32,6 @@ class MainWindow(tk.CTkToplevel):
         self.daily_arena = DailyArena(utilities, self.msg_queue)
         self.daily_arena_process = None
 
-        # Set window size and title
         self.title("E7 Secret Shop Auto")
         self.geometry("500x630")
         self.resizable(False, False)
@@ -91,7 +90,7 @@ class MainWindow(tk.CTkToplevel):
         self.start_arena_button = tk.CTkButton(main_frame, text="Start Arena", command=self.run_arena_process)
         self.start_arena_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
-        # Logger frame to track log (Unchanged as per request)
+        # Logger frame to track log
         self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=250, width=500)
         self.log_frame.grid_columnconfigure(0, weight=1)
         self.log_frame.grid_rowconfigure(0, weight=1)
