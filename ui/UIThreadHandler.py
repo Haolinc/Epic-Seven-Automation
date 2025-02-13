@@ -13,7 +13,7 @@ class MessageThreadHandler:
     """
     def __init__(self, ui_listener, msg_queue):
         self.ui_listener = ui_listener
-        self.thread = threading.Thread(target=self.fetch_msg, daemon=True)
+        self.thread = threading.Thread(target=self.__fetch_msg, daemon=True)
         self.end_checking_ui_event = threading.Event()
         self.msg_queue: Queue = msg_queue
 
@@ -24,7 +24,7 @@ class MessageThreadHandler:
     def stop_thread(self):
         self.end_checking_ui_event.set()
 
-    def fetch_msg(self):
+    def __fetch_msg(self):
         while not self.end_checking_ui_event.is_set():
             try:
                 message: UIMessage = self.msg_queue.get(timeout=0.2)

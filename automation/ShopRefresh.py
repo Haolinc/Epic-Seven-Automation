@@ -27,39 +27,39 @@ class ShopRefresh:
         self.shop_icon = utilities.process_image_from_disk(
             PathConverter.get_current_path("image\\shop_refresh_asset", "Shop.png"))
 
-    def check_covenant(self) -> bool:
+    def __check_covenant(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
                                               target_img=self.covenant.image, confidence=0.93, color_sensitive=True))
 
-    def buy_covenant(self):
+    def __buy_covenant(self):
         self.utilities.click_target_offset(target_img=self.covenant.image, future_target_img=self.covenant_buy_confirmation.image,
                                            position_offset=(850, 25), identifier="Buy Covenant Button")
         self.utilities.click_target(target_tagged_img=self.covenant_buy_confirmation, future_tagged_imgs=self.shop_icon,
                                     identifier="Buy Covenant Confirmation Button")
         self.msg_queue.put(UIMessage(UIThreadMessage.COVENANT_FOUND))
 
-    def check_mystic(self) -> bool:
+    def __check_mystic(self) -> bool:
         return bool(self.utilities.find_image(source_img=self.utilities.get_numpy_screenshot(),
                                               target_img=self.mystic.image, confidence=0.93, color_sensitive=True))
 
-    def buy_mystic(self):
+    def __buy_mystic(self):
         self.utilities.click_target_offset(target_img=self.mystic.image, future_target_img=self.mystic_buy_confirmation.image,
                                            position_offset=(850, 25), identifier="Buy Mystic Button")
         self.utilities.click_target(target_tagged_img=self.mystic_buy_confirmation, future_tagged_imgs=self.shop_icon,
                                     identifier="Buy Mystic Confirmation Button")
         self.msg_queue.put(UIMessage(UIThreadMessage.MYSTIC_FOUND))
 
-    def refresh_shop(self):
+    def __refresh_shop(self):
         self.utilities.click_target(target_tagged_img=self.refresh, future_tagged_imgs=self.refresh_confirm,
                                     identifier="Refresh Button")
         self.utilities.click_target(target_tagged_img=self.refresh_confirm, future_tagged_imgs=self.shop_icon,
                                     identifier="Refresh Confirmation Button")
 
-    def check_bookmark_and_update_log(self):
-        if self.check_covenant():
-            self.buy_covenant()
-        if self.check_mystic():
-            self.buy_mystic()
+    def __check_bookmark_and_update_log(self):
+        if self.__check_covenant():
+            self.__buy_covenant()
+        if self.__check_mystic():
+            self.__buy_mystic()
 
     def start_store_fresh_iteration(self, total_iteration: int):
         current_iteration = 0
@@ -67,18 +67,18 @@ class ShopRefresh:
         self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, "Initial Search"))
         try:
             while current_iteration < total_iteration:
-                self.check_bookmark_and_update_log()
+                self.__check_bookmark_and_update_log()
                 self.utilities.swipe_down()
                 time.sleep(0.5)
-                self.check_bookmark_and_update_log()
-                self.refresh_shop()
+                self.__check_bookmark_and_update_log()
+                self.__refresh_shop()
                 current_iteration += 1
                 self.msg_queue.put(UIMessage(UIThreadMessage.ADD_TO_LOG_FRAME, f"Iteration: {current_iteration}"))
             # Check again for last refresh
-            self.check_bookmark_and_update_log()
+            self.__check_bookmark_and_update_log()
             self.utilities.swipe_down()
             time.sleep(0.5)
-            self.check_bookmark_and_update_log()
+            self.__check_bookmark_and_update_log()
             self.msg_queue.put(UIMessage(UIThreadMessage.STOP))
         except Exception as e:
             self.msg_queue.put(UIMessage(UIThreadMessage.ERROR, str(e)))

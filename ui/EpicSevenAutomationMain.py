@@ -37,12 +37,12 @@ class MainWindow(tk.CTkToplevel):
         self.resizable(False, False)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        self.create_main_widgets()
+        self.__create_main_widgets()
         self.ui_listener = Listener(self)
         self.protocol("WM_DELETE_WINDOW", self.master.destroy)
         UIHelper.set_window_icon(self)
 
-    def create_main_widgets(self):
+    def __create_main_widgets(self):
         # Main frame setup
         main_frame = tk.CTkFrame(self)
         main_frame.grid(pady=15, padx=15, sticky="nsew")
@@ -67,7 +67,7 @@ class MainWindow(tk.CTkToplevel):
 
         # Start button
         self.start_shop_refresh_button = tk.CTkButton(main_frame, text="Start Shop Refresh",
-                                                      command=self.run_shop_refresh_process)
+                                                      command=self.__run_shop_refresh_process)
         self.start_shop_refresh_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Arena options
@@ -87,7 +87,7 @@ class MainWindow(tk.CTkToplevel):
         self.arena_checkbox.grid(pady=5, padx=10, sticky="w")
 
         # Arena start button
-        self.start_arena_button = tk.CTkButton(main_frame, text="Start Arena", command=self.run_arena_process)
+        self.start_arena_button = tk.CTkButton(main_frame, text="Start Arena", command=self.__run_arena_process)
         self.start_arena_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Logger frame to track log
@@ -96,7 +96,7 @@ class MainWindow(tk.CTkToplevel):
         self.log_frame.grid_rowconfigure(0, weight=1)
         self.log_frame.grid(padx=10, sticky="nsew")
 
-    def run_shop_refresh_process(self):
+    def __run_shop_refresh_process(self):
         """
         To run or terminate secret shop process.
         """
@@ -111,7 +111,7 @@ class MainWindow(tk.CTkToplevel):
             UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
             self.shop_refresh_process.stop_process()
 
-    def run_arena_process(self):
+    def __run_arena_process(self):
         """
         To run or terminate NPC challenge arena process.
         """

@@ -24,7 +24,7 @@ class Utilities:
                                                                                      "Try_Again.png"))
         self.position_cache: dict[str, tuple[int, int]] = {}
 
-    def blur_image(self, image):
+    def __blur_image(self, image):
         """
         Blur and convert image to ndarray.
         :param image: must be ndarray or UMat
@@ -36,7 +36,7 @@ class Utilities:
         Get the blur version of screenshot in the adb device
         :return: it will be represented in BGR color.
         """
-        return self.blur_image(self.device.screenshot())
+        return self.__blur_image(self.device.screenshot())
 
     def find_image(self, source_img, target_img, confidence: float = 0.82, color_sensitive: bool = False) -> dict[any, any]:
         """
@@ -84,7 +84,7 @@ class Utilities:
         :return: image with identifier
         """
         image_umat = cv2.imread(path)
-        blur_umat = self.blur_image(image_umat)
+        blur_umat = self.__blur_image(image_umat)
         height, width = blur_umat.shape[:2]
         adjusted_image = cv2.resize(blur_umat, self.get_relative_coord((width, height)),
                                     interpolation=cv2.INTER_LINEAR_EXACT)
@@ -145,7 +145,7 @@ class Utilities:
             print(f"Exception: {e}")
             if retry_count <= 0:
                 raise
-            is_expedition = self.check_and_refresh_expedition()
+            is_expedition = self.__check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             # Re-click on target with new screenshot
             self.click_target_offset(target_img, future_target_img, position_offset, retry_count - 1, identifier)
@@ -211,7 +211,7 @@ class Utilities:
             print(f"Exception: {e}, Identifier: {identifier}")
             if retry_count <= 0:
                 raise ValueError(f"Exception: {e}, Identifier: {identifier}")
-            is_expedition = self.check_and_refresh_expedition()
+            is_expedition = self.__check_and_refresh_expedition()
             print(f"Found expedition? {is_expedition}")
             if is_expedition:
                 self.click_target(target_tagged_img, future_tagged_imgs, retry_count, 0.5, color_sensitive, confidence,
@@ -219,7 +219,7 @@ class Utilities:
             self.click_target(target_tagged_img, future_tagged_imgs, retry_count - 1, 0.5, color_sensitive, confidence,
                               identifier, False)
 
-    def check_and_refresh_expedition(self) -> bool:
+    def __check_and_refresh_expedition(self) -> bool:
         current_screenshot = self.get_numpy_screenshot()
         if self.find_image(source_img=current_screenshot, target_img=self.try_again.image):
             self.click_target(target_tagged_img=self.try_again, identifier="refresh expedition")
