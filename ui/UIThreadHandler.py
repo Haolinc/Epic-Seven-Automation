@@ -2,6 +2,7 @@ import queue
 import threading
 from multiprocessing import Queue
 
+import ExceptionHandler
 from ui.UIComponentEnum import UIThreadMessage as MsgEnum, LabelEnum, ButtonEnum
 from ui.UIMessage import UIMessage
 
@@ -55,6 +56,7 @@ class ThreadHandler:
                         self.ui_listener.reset_log_frame()
 
                     case MsgEnum.ERROR:
+                        ExceptionHandler.output_error_to_file(message.text)
                         self.ui_listener.add_label_to_log_frame(text=f"Error: {message.text}")
                         self.end_checking_ui_event.set()
 
