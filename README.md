@@ -1,7 +1,7 @@
 # Epic Seven Automation Tool
 ![app-9](https://github.com/user-attachments/assets/dd3deb72-196b-4051-b477-3524c1de6349)
 
-This project utilizes ADB (Android Debug Bridge) tools to connect the emulators and simulate click actions. Since it uses ADB to communicate with emulators, it won't take away the keyboard and mouse control. 
+This project utilizes ADB (Android Debug Bridge) tools to connect the emulators and simulate user actions without taking away the keyboard and mouse control. 
 
 # Current Feature
 ## Refresh Shop Demo
