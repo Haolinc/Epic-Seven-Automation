@@ -1,6 +1,7 @@
+import subprocess
+import adbutils
 import customtkinter as tk
 
-import AdbConnector
 import PathConverter
 from automation.Utilities import Utilities
 from ui import UIHelper
@@ -10,9 +11,13 @@ import PIL.Image as Image
 tk.set_appearance_mode("System")
 
 default_image = Image.open(PathConverter.get_current_path("image", "No_Image_Available.png"))
+serial_and_image_dict: dict[str, Image.Image] = {}
 
 
 class DeviceSelectionUI(tk.CTkToplevel):
+    """
+    Initial selection window to select desired emulator.
+    """
     def __init__(self, root):
         super().__init__(root)
         self.device_refresh_button = None
@@ -46,9 +51,9 @@ class DeviceSelectionUI(tk.CTkToplevel):
         self.refresh_device_ui()
 
     def refresh_device_ui(self):
-        AdbConnector.refresh_adb_device_list()
-        if AdbConnector.serial_and_image_dict:
-            serial_name_list = list(AdbConnector.serial_and_image_dict.keys())
+        self.refresh_adb_device_list()
+        if serial_and_image_dict:
+            serial_name_list = list(serial_and_image_dict.keys())
             self.startup_label.configure(text="Please select device")
             self.adb_connection_menu.configure(values=serial_name_list)
             self.adb_connection_menu.set(serial_name_list[0])
@@ -61,8 +66,21 @@ class DeviceSelectionUI(tk.CTkToplevel):
             self.startup_button.configure(state="disabled")
             self.device_screenshot_image.configure(light_image=default_image)
 
+    def refresh_adb_device_list(self):
+        serial_and_image_dict.clear()
+        adb_command = PathConverter.get_current_path("platform-tools", "adb devices -l")
+        adb_device_result_list = subprocess.run(adb_command, capture_output=True, text=True).stdout.splitlines()
+        adb_device_result_list.pop(0)
+        adb_device_result_list.pop()
+        for adb_device_info in adb_device_result_list:
+            lst = adb_device_info.split(" ")  # lst[0] is the serial number
+            serial_name = lst[0]
+            current_model_device = adbutils.device(lst[0])
+            current_device_image: Image = current_model_device.screenshot()
+            serial_and_image_dict[serial_name] = current_device_image
+
     def show_current_screenshot(self, choice):
-        choice_image = AdbConnector.serial_and_image_dict[choice]
+        choice_image = serial_and_image_dict[choice]
         self.device_screenshot_image.configure(light_image=choice_image)
 
     def launch_main_window(self):

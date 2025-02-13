@@ -6,6 +6,9 @@ from ui.UIMessage import UIMessage
 
 
 class ShopRefresh:
+    """
+    Secret shop bookmark purchase automation class
+    """
     def __init__(self, utilities: Utilities, msg_queue):
         self.utilities = utilities
         self.msg_queue = msg_queue

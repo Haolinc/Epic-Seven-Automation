@@ -10,6 +10,9 @@ from automation.TaggedImage import TaggedImage
 
 
 class Utilities:
+    """
+    Common functions for automation.
+    """
     def __init__(self, serial: str):
         self.device = adbutils.device(serial)
         print(self.device.shell('wm size'))
@@ -22,11 +25,16 @@ class Utilities:
         self.position_cache: dict[str, tuple[int, int]] = {}
 
     def blur_image(self, image):
+        """
+        Blur and convert image to ndarray.
+        :param image: must be ndarray or UMat
+        """
         return cv2.GaussianBlur(numpy.array(image), (5, 5), 0)
 
     def get_numpy_screenshot(self):
         """
-        Get the blur version of screenshot in the adb device.
+        Get the blur version of screenshot in the adb device
+        :return: it will be represented in BGR color.
         """
         return self.blur_image(self.device.screenshot())
 
@@ -178,8 +186,7 @@ class Utilities:
                             return
                     cache_click = False
 
-                # If cache click failed or not intended to cache click
-                # Normal click operation
+                # If cache click failed or not intended to cache click, perform normal click operation
                 source_img = self.get_numpy_screenshot()
                 target_img_pos = self.find_image(source_img=source_img, target_img=target_tagged_img.image,
                                                  confidence=confidence, color_sensitive=color_sensitive)

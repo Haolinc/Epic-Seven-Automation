@@ -13,6 +13,9 @@ tk.set_appearance_mode("System")
 
 
 class MainWindow(tk.CTkToplevel):
+    """
+    Main window for automation.
+    """
     def __init__(self, root, utilities: Utilities):
         super().__init__(root)
         self.log_frame = None
@@ -94,8 +97,10 @@ class MainWindow(tk.CTkToplevel):
         self.log_frame.grid_rowconfigure(0, weight=1)
         self.log_frame.grid(padx=10, sticky="nsew")
 
-    # Function to change button state and run or terminate process in thread
     def run_shop_refresh_process(self):
+        """
+        To run or terminate secret shop process.
+        """
         if self.start_shop_refresh_button.cget("text") == "Start Shop Refresh":
             self.shop_refresh_process = ProcessManager(function=self.shop_refresh.start_store_fresh_iteration,
                                                        args=(int(self.refresh_shop_count_entry.get()),),
@@ -108,10 +113,12 @@ class MainWindow(tk.CTkToplevel):
             self.shop_refresh_process.stop_process()
 
     def run_arena_process(self):
+        """
+        To run or terminate NPC challenge arena process.
+        """
         total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.ARENA_COUNT_ENTRY)
         run_with_friendship_flag: bool = self.ui_listener.get_checkbox_bool(CheckBoxEnum.ARENA_WITH_FRIENDSHIP)
 
-        # when 'start button is pressed'
         if self.start_arena_button.cget("text") == "Start Arena":
             self.start_arena_button.configure(text="Stop Arena Automation")
             self.daily_arena_process = ProcessManager(function=self.daily_arena.run_arena_automation_subprocess,
@@ -120,7 +127,6 @@ class MainWindow(tk.CTkToplevel):
                                                       msg_queue=self.msg_queue)
             self.daily_arena_process.start_process()
         else:
-            # when 'stop button is pressed'
             self.start_arena_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame,
                                         text="####### Process Stopping, Please Wait #######")
@@ -128,6 +134,9 @@ class MainWindow(tk.CTkToplevel):
 
 
 class Listener:
+    """
+    Class that allow other classes to manipulate UI elements.
+    """
     def __init__(self, parent: MainWindow):
         self.parent = parent
 

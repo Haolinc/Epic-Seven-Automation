@@ -6,7 +6,9 @@ from ui.UIMessage import UIMessage
 
 
 class DailyArena:
-
+    """
+    NPC challenge arena automation main logic.
+    """
     def __init__(self, utilities: Utilities, msg_queue):
         self.utilities = utilities
         self.msg_queue = msg_queue

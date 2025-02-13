@@ -7,7 +7,10 @@ from ui.UIComponentEnum import UIThreadMessage as MsgEnum, LabelEnum, ButtonEnum
 from ui.UIMessage import UIMessage
 
 
-class ThreadHandler:
+class MessageThreadHandler:
+    """
+    Thread to handle different message from automation classes.
+    """
     def __init__(self, ui_listener, msg_queue):
         self.ui_listener = ui_listener
         self.thread = threading.Thread(target=self.fetch_msg, daemon=True)
@@ -25,7 +28,6 @@ class ThreadHandler:
         while not self.end_checking_ui_event.is_set():
             try:
                 message: UIMessage = self.msg_queue.get(timeout=0.2)
-                print(f"msg {message.msg_enum}, text: {message.text}")
                 match message.msg_enum:
                     case MsgEnum.ADD_TO_LOG_FRAME:
                         self.ui_listener.add_label_to_log_frame(f"-------- {message.text} --------")
@@ -64,10 +66,9 @@ class ThreadHandler:
                         self.end_checking_ui_event.set()
 
                     case _:
-                        print("something wrong")
+                        print("Invalid Message Enum")
 
             except queue.Empty:
                 pass
         self.ui_listener.reset_ui_component()
         self.ui_listener.add_label_to_log_frame("####### Process Stopped #######")
-        # self.ui_listener.update_ui()
