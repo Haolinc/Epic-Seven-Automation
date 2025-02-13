@@ -13,7 +13,7 @@ This project utilizes ADB (Android Debug Bridge) tools to connect the emulators 
 
 # Installation
 ## Direct Download
-Download via Google Drive: https://drive.google.com/file/d/1JcYvzmtRjfqSq9mmjhV9tdmS-F-iL6o2/view?usp=drive_link
+Download from the [latest release](https://github.com/Haolinc/Epic-Seven-Automation/releases).
 
 ## Github
 Please make sure to use **Python 3.11.0** as the higher python version is not compatible with one of the libraries in requirement.txt.
@@ -29,7 +29,7 @@ Use ```pyinstaller --onefile --windowed --add-data="image:image" --add-data="pla
 Executable file usually located under project's ```dist``` folder.
 
 # Usage
-1. Launch the emulator, make sure your emulator is enabled with ADB. (LD Player, BlueStack, Google Play Games Developer Emulator, and even android phone with debugging mode on)
+1. Launch the emulator, make sure your emulator is enabled with ADB. (LD Player, BlueStack, Google Play Games Developer Emulator, or even android phone with debugging mode on)
 
 ![ADBSetting](https://github.com/user-attachments/assets/537e7d17-5b62-4791-a95d-2b9b99f73a05)
 
