@@ -1,5 +1,5 @@
 import multiprocessing
-from ui.UIThreadHandler import ThreadHandler
+from ui.UIThreadHandler import MessageThreadHandler
 
 
 class ProcessManager:
@@ -7,7 +7,7 @@ class ProcessManager:
         self.ui_listener = ui_listener
         self.process = multiprocessing.Process(target=function, args=args)
         self.process.daemon = True
-        self.thread_handler = ThreadHandler(ui_listener=ui_listener, msg_queue=msg_queue)
+        self.thread_handler = MessageThreadHandler(ui_listener=ui_listener, msg_queue=msg_queue)
 
     def start_process(self):
         self.process.start()

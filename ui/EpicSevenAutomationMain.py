@@ -12,9 +12,12 @@ from ui.UIComponentEnum import *
 tk.set_appearance_mode("System")
 
 
-class MainWindow(tk.CTk):
-    def __init__(self, utilities: Utilities):
-        super().__init__()
+class MainWindow(tk.CTkToplevel):
+    """
+    Main window for automation.
+    """
+    def __init__(self, root, utilities: Utilities):
+        super().__init__(root)
         self.log_frame = None
         self.refresh_shop_count_entry = None
         self.arena_count_entry = None
@@ -29,16 +32,17 @@ class MainWindow(tk.CTk):
         self.daily_arena = DailyArena(utilities, self.msg_queue)
         self.daily_arena_process = None
 
-        # Set window size and title
         self.title("E7 Secret Shop Auto")
         self.geometry("500x630")
         self.resizable(False, False)
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        self.create_main_widgets()
+        self.__create_main_widgets()
         self.ui_listener = Listener(self)
+        self.protocol("WM_DELETE_WINDOW", self.master.destroy)
+        UIHelper.set_window_icon(self)
 
-    def create_main_widgets(self):
+    def __create_main_widgets(self):
         # Main frame setup
         main_frame = tk.CTkFrame(self)
         main_frame.grid(pady=15, padx=15, sticky="nsew")
@@ -63,7 +67,7 @@ class MainWindow(tk.CTk):
 
         # Start button
         self.start_shop_refresh_button = tk.CTkButton(main_frame, text="Start Shop Refresh",
-                                                      command=self.run_shop_refresh_process)
+                                                      command=self.__run_shop_refresh_process)
         self.start_shop_refresh_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
         # Arena options
@@ -83,17 +87,19 @@ class MainWindow(tk.CTk):
         self.arena_checkbox.grid(pady=5, padx=10, sticky="w")
 
         # Arena start button
-        self.start_arena_button = tk.CTkButton(main_frame, text="Start Arena", command=self.run_arena_process)
+        self.start_arena_button = tk.CTkButton(main_frame, text="Start Arena", command=self.__run_arena_process)
         self.start_arena_button.grid(pady=(5, 15), padx=10, sticky="ew")
 
-        # Logger frame to track log (Unchanged as per request)
+        # Logger frame to track log
         self.log_frame = tk.CTkScrollableFrame(master=main_frame, height=250, width=500)
         self.log_frame.grid_columnconfigure(0, weight=1)
         self.log_frame.grid_rowconfigure(0, weight=1)
         self.log_frame.grid(padx=10, sticky="nsew")
 
-    # Function to change button state and run or terminate process in thread
-    def run_shop_refresh_process(self):
+    def __run_shop_refresh_process(self):
+        """
+        To run or terminate secret shop process.
+        """
         if self.start_shop_refresh_button.cget("text") == "Start Shop Refresh":
             self.shop_refresh_process = ProcessManager(function=self.shop_refresh.start_store_fresh_iteration,
                                                        args=(int(self.refresh_shop_count_entry.get()),),
@@ -105,11 +111,13 @@ class MainWindow(tk.CTk):
             UIHelper.add_label_to_frame(frame=self.log_frame, text="####### Process Stopping, Please Wait #######")
             self.shop_refresh_process.stop_process()
 
-    def run_arena_process(self):
+    def __run_arena_process(self):
+        """
+        To run or terminate NPC challenge arena process.
+        """
         total_iteration: int = self.ui_listener.get_entry_count(EntryEnum.ARENA_COUNT_ENTRY)
         run_with_friendship_flag: bool = self.ui_listener.get_checkbox_bool(CheckBoxEnum.ARENA_WITH_FRIENDSHIP)
 
-        # when 'start button is pressed'
         if self.start_arena_button.cget("text") == "Start Arena":
             self.start_arena_button.configure(text="Stop Arena Automation")
             self.daily_arena_process = ProcessManager(function=self.daily_arena.run_arena_automation_subprocess,
@@ -118,17 +126,16 @@ class MainWindow(tk.CTk):
                                                       msg_queue=self.msg_queue)
             self.daily_arena_process.start_process()
         else:
-            # when 'stop button is pressed'
             self.start_arena_button.configure(state="disabled")
             UIHelper.add_label_to_frame(frame=self.log_frame,
                                         text="####### Process Stopping, Please Wait #######")
             self.daily_arena_process.stop_process()
 
-    def launch(self):
-        self.mainloop()
-
 
 class Listener:
+    """
+    Class that allow other classes to manipulate UI elements.
+    """
     def __init__(self, parent: MainWindow):
         self.parent = parent
 
