@@ -1,4 +1,6 @@
 # Epic Seven Automation Tool
+![app-9](https://github.com/user-attachments/assets/dd3deb72-196b-4051-b477-3524c1de6349)
+
 This project utilizes ADB (Android Debug Bridge) tools to connect the emulators and simulate click actions. Since it uses ADB to communicate with emulators, it won't take away the keyboard and mouse control. 
 
 # Current Feature
@@ -9,16 +11,22 @@ This project utilizes ADB (Android Debug Bridge) tools to connect the emulators 
 ![Daily Arena Demo](https://github.com/user-attachments/assets/b4f48c6e-c5a5-4a7a-ae5f-e606f6b847e5)
 
 
-# Getting Started
-## Installation
-### Direct Download
-(To be added)
-### Github
+# Installation
+## Direct Download
+Download via Google Drive: https://drive.google.com/file/d/1JcYvzmtRjfqSq9mmjhV9tdmS-F-iL6o2/view?usp=drive_link
+
+## Github
 Please make sure to use **Python 3.11.0** as the higher python version is not compatible with one of the libraries in requirement.txt.
 
-Use  ```pip install -r requirement.txt ``` to install required libraries.
+Use  ```pip install -r requirement.txt``` to install required libraries.
 
-Use ```py main.py ``` or directly run ```main.py``` from IDE to start the script.
+Then use ```py EpicSevenAutomationLauncher.py``` or directly run ```EpicSevenAutomationLauncher.py``` from IDE to start the tool.
+
+OR
+
+Use ```pyinstaller --onefile --windowed --add-data="image:image" --add-data="platform-tools:platform-tools" --icon=image\app.ico EpicSevenAutomationLauncher.py``` to compile an EXE file.
+
+Executable file usually located under project's ```dist``` folder.
 
 # Usage
 1. Launch the emulator, make sure your emulator is enabled with ADB.
@@ -57,10 +65,3 @@ Use ```py main.py ``` or directly run ```main.py``` from IDE to start the script
 
 
 3. Click Start Shop Refresh to start the application.
-
-# Possible Questions
-### Is this script usable in different emulators?
-This script has been tested in LD player, BlueStack, and Google Play Games Developer Emulator (**Not Goole Play Games**) with various resolutions including 1920x1080, 1600x900, and 2400x1080. 
-Please be aware that the higher resolution the slower it might be when running the script.
-### Why there is No Device Found after starting the script even though my emulator is started?
-Please make sure that your ADB (Android Debug Bridge) in your emulator setting is checked. If the issue persists then please try rebooting your PC.
